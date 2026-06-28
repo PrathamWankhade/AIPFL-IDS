@@ -1,0 +1,33 @@
+# Virtual environment
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Models
+*.keras
+*.h5
+*.pkl
+
+# Dataset
+data/raw/*
+!data/raw/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+# Results
+results/*
+!results/.gitkeep
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
