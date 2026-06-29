@@ -1,0 +1,47 @@
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+MODELS_DIR = BASE_DIR / "models"
+DATA_DIR = BASE_DIR / "data"
+UPLOAD_DIR = BASE_DIR / "uploads"
+RESULTS_DIR = BASE_DIR / "results"
+
+MODEL_PATH = MODELS_DIR / "NF_ToN_IoT_Federated_Model.keras"
+BEST_MODEL_PATH = MODELS_DIR / "best_federated_model.keras"
+SCALER_PATH = MODELS_DIR / "scaler.pkl"
+LABEL_ENCODER_PATH = MODELS_DIR / "label_encoder.pkl"
+
+DATASET_SOURCE = "dhoogla/nftoniotv2"
+DATASET_FILE = "NF-ToN-IoT-V2.parquet"
+MAX_SAMPLES_PER_CLASS = 50000
+RANDOM_STATE = 42
+
+UNSTABLE_FEATURES = ["SRC_TO_DST_SECOND_BYTES", "DST_TO_SRC_SECOND_BYTES"]
+
+DENSE_UNITS = [512, 256, 128, 64]
+DROPOUT_RATES = [0.30, 0.30, 0.20]
+L2_REG = 1e-4
+
+LEARNING_RATE = 0.0005
+CLIPNORM = 1.0
+BATCH_SIZE = 1024
+EPOCHS_PER_CLIENT = 3
+GLOBAL_ROUNDS = 10
+NUM_CLIENTS = 10
+TEST_SPLIT = 0.20
+
+EARLY_STOPPING_PATIENCE = 2
+REDUCE_LR_PATIENCE = 1
+REDUCE_LR_FACTOR = 0.5
+MIN_LR = 1e-6
+
+SEED = 42
+MIXED_PRECISION = "mixed_float16"
+
+MAX_FILE_SIZE_MB = 50
+ALLOWED_EXTENSIONS = {".csv", ".parquet"}
+
+for d in [MODELS_DIR, UPLOAD_DIR, DATA_DIR / "raw", DATA_DIR / "processed", RESULTS_DIR]:
+    os.makedirs(d, exist_ok=True)

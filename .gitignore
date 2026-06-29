@@ -1,33 +1,50 @@
-# Virtual environment
+# Dependencies
+node_modules/
 .venv/
-
-# Python
 __pycache__/
 *.pyc
-*.pyo
 
-# Jupyter
-.ipynb_checkpoints/
+# Next.js
+frontend/.next/
+frontend/out/
 
-# Models
-*.keras
-*.h5
-*.pkl
+# Build
+dist/
+build/
 
-# Dataset
-data/raw/*
-!data/raw/.gitkeep
+# Runtime
+backend/uploads/
+backend/models/*.keras
+backend/models/*.pkl
 
-data/processed/*
-!data/processed/.gitkeep
+# Environment
+.env
+.env.local
+.env.*.local
 
-# Results
-results/*
-!results/.gitkeep
-
-# VS Code
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Data
+backend/data/raw/
+backend/data/processed/
+
+# Results
+backend/results/*.png
+backend/results/*.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage
+coverage/
+
+# Misc
+*.log
