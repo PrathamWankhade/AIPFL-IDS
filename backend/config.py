@@ -76,6 +76,10 @@ MAX_UPLOAD_COLUMNS = int(os.environ.get("AIPFL_MAX_COLS", "200"))
 MAX_BATCH_ROWS = int(os.environ.get("AIPFL_MAX_BATCH_ROWS", "5000"))
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
     "AIPFL_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",") if o.strip()]
+# Optional app-level controls (off by default; REQUIRED when exposed beyond
+# localhost — the reverse proxy remains the primary boundary).
+API_KEY = os.environ.get("AIPFL_API_KEY") or None
+RATE_LIMIT_PER_MIN = int(os.environ.get("AIPFL_RATE_LIMIT_PER_MIN", "0"))
 
 for d in [MODELS_DIR, UPLOAD_DIR, DATA_DIR / "raw", DATA_DIR / "processed", RESULTS_DIR]:
     os.makedirs(d, exist_ok=True)

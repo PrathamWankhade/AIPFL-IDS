@@ -15,6 +15,10 @@
 - Reverse proxy with TLS, request-size limits matching the app caps,
   authentication (API key/OIDC), per-user quotas/rate limits, access logs
   with request IDs, and separate admin functions.
+- App-level (defense in depth, single-replica): set `AIPFL_API_KEY` to
+  require `X-API-Key` on `/api/predict*` and `/api/jobs*`, and
+  `AIPFL_RATE_LIMIT_PER_MIN` for a per-IP sliding-window limit. These are
+  not a substitute for the proxy boundary.
 - CORS: `AIPFL_ALLOWED_ORIGINS` (default localhost:3000,3001),
   credentials disabled. This is not authentication.
 

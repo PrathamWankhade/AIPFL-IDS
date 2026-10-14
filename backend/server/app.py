@@ -26,6 +26,55 @@ CORS(app, origins=config.ALLOWED_ORIGINS, supports_credentials=False)
 ALLOWED_EXTENSIONS = {".csv", ".parquet"}
 
 
+def is_api_key_ok(provided):
+    """True when no key configured (open local dev) or the key matches."""
+    expected = getattr(config, "API_KEY", None)
+    if not expected:
+        return True
+    return bool(provided) and provided == expected
+
+
+class RateLimiter:
+    """Sliding-window per-IP limiter (single-replica demo)."""
+
+    def __init__(self, per_minute=0):
+        self.per_minute = per_minute
+        self._hits: dict = {}
+        self._lock = threading.Lock()
+
+    def allowed(self, key, now=None):
+        limit = self.per_minute or getattr(config, "RATE_LIMIT_PER_MIN", 0)
+        if not limit:
+            return True
+        now = now if now is not None else time.time()
+        window = 60.0
+        with self._lock:
+            hits = [t for t in self._hits.get(key, []) if now - t < window]
+            if len(hits) >= limit:
+                self._hits[key] = hits
+                return False
+            hits.append(now)
+            self._hits[key] = hits
+            return True
+
+
+rate_limiter = RateLimiter()
+
+
+@app.before_request
+def _enforce_edge_controls():
+    if request.method == "OPTIONS":
+        return None
+    if request.path.startswith("/api/predict") or request.path.startswith("/api/jobs"):
+        if not is_api_key_ok(request.headers.get("X-API-Key")):
+            if getattr(config, "API_KEY", None):
+                return json_error("Invalid or missing API key.", 401)
+        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+        if not rate_limiter.allowed(f"infer:{ip}"):
+            return json_error("Rate limit exceeded. Retry later.", 429)
+    return None
+
+
 def allowed_file(filename):
     return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
 
