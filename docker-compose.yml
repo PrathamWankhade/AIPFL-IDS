@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      AIPFL_MAX_FILE_MB: "50"
+      AIPFL_ALLOWED_ORIGINS: "http://localhost:3000"
+    volumes:
+      - ./backend/models:/app/backend/models:ro
+      - ./backend/results:/app/backend/results:ro
+      - uploads:/app/backend/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/livez')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # Terminate TLS at the reverse proxy in front of this compose stack;
+    # do not expose this port directly to untrusted networks without
+    # auth, rate limits, and audit logging (see docs/DEPLOYMENT.md).
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  uploads:
