@@ -8,7 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#)
 
-Privacy-preserving cybersecurity platform using Deep Learning + Federated Learning to detect malicious IoT network traffic without sharing raw data. Supports **two datasets**: CICIoT2023 (34 original labels, mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes).
+Research-prototype cybersecurity platform using Deep Learning + simulated Federated Learning to detect malicious IoT network traffic. Client partitions are simulated in one process — this does not yet demonstrate privacy guarantees for independent clients, secure aggregation, or differential privacy (see `docs/THREAT_MODEL.md`). Supports **two datasets**: CICIoT2023 (34 original labels, mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes).
 
 ---
 
@@ -182,10 +182,13 @@ All endpoints at `/api/*` (proxied to Flask). Response format: `{success: bool, 
 | `/api/models` | GET | Model name/dataset/size (no absolute paths) |
 | `/api/config` | GET | Server configuration (both datasets) |
 
-Training flags: `--seed`, `--partition iid|label_skew|quantity_skew`, `--alpha`, `--client-fraction`.
+Training flags: `--seed`, `--partition iid|label_skew|quantity_skew`, `--alpha`, `--client-fraction`,
+`--split stratified|group`, `--group-col`.
 Env: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`, `AIPFL_MAX_BATCH_ROWS`,
-`AIPFL_ALLOWED_ORIGINS`, `AIPFL_SEED`, `AIPFL_PARTITION`, `AIPFL_ALPHA`,
-`AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`. See `docs/DEPLOYMENT.md` and `docs/THREAT_MODEL.md`.
+`AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`, `AIPFL_ALLOWED_ORIGINS`, `AIPFL_API_KEY`,
+`AIPFL_RATE_LIMIT_PER_MIN`, `AIPFL_TRUST_PROXY`, `AIPFL_REQUIRE_MANIFEST`, `AIPFL_SEED`,
+`AIPFL_PARTITION`, `AIPFL_ALPHA`, `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`.
+See `docs/DEPLOYMENT.md` and `docs/THREAT_MODEL.md`.
 
 ---
 
