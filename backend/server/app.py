@@ -31,12 +31,38 @@ def allowed_file(filename):
 
 
 def load_file_data(filepath):
+    """Bounded parse: enforce column/row caps BEFORE holding the full frame.
+
+    CSV streams in chunks and aborts past MAX_UPLOAD_ROWS + 1; Parquet
+    checks file metadata/row-groups first. Raises ValueError on violation.
+    """
     ext = os.path.splitext(filepath)[1].lower()
     if ext == ".csv":
-        # nrows guard happens after load via shape check; chunks would need
-        # a job queue (Phase 3). Refuse decompression bombs via size cap first.
-        return pd.read_csv(filepath)
+        cols = pd.read_csv(filepath, nrows=0).columns
+        if len(cols) > config.MAX_UPLOAD_COLUMNS:
+            raise ValueError(
+                f"File has {len(cols)} columns; limit is {config.MAX_UPLOAD_COLUMNS}.")
+        chunks, total = [], 0
+        for chunk in pd.read_csv(filepath, chunksize=20000):
+            chunks.append(chunk)
+            total += len(chunk)
+            if total > config.MAX_UPLOAD_ROWS:
+                raise ValueError(
+                    f"File exceeds {config.MAX_UPLOAD_ROWS:,} rows; split it or use /api/jobs.")
+        if total == 0:
+            raise ValueError("Uploaded file contains no data rows.")
+        return pd.concat(chunks, ignore_index=True) if len(chunks) > 1 else chunks[0]
     elif ext == ".parquet":
+        import pyarrow.parquet as pq
+        pf = pq.ParquetFile(filepath)
+        if pf.metadata.num_columns > config.MAX_UPLOAD_COLUMNS:
+            raise ValueError(
+                f"File has {pf.metadata.num_columns} columns; limit is {config.MAX_UPLOAD_COLUMNS}.")
+        if pf.metadata.num_rows > config.MAX_UPLOAD_ROWS:
+            raise ValueError(
+                f"File has {pf.metadata.num_rows:,} rows; limit is {config.MAX_UPLOAD_ROWS:,}.")
+        if pf.metadata.num_rows == 0:
+            raise ValueError("Uploaded file contains no data rows.")
         return pd.read_parquet(filepath)
     raise ValueError(f"Unsupported file type: {ext}")
 
