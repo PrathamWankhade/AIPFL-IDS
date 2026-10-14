@@ -902,6 +902,21 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   outline-offset: 2px;
 }
 
+/* Skip link for keyboard users. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  padding: 10px 16px;
+  background: var(--yellow);
+  color: var(--black-pure);
+  border: var(--border-thick);
+  font-weight: 700;
+  z-index: 200;
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus { top: 12px; }
+
 .dash-card h3 {
   font-size: 0.8rem;
   font-weight: 700;

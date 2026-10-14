@@ -18,8 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider>
+          <a href="#main-content" className="skip-link">Skip to content</a>
           <Navbar />
-          <main>
+          <main id="main-content">
             <AnimationInit>{children}</AnimationInit>
           </main>
           <Footer />

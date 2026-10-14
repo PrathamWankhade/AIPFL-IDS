@@ -29,13 +29,11 @@ export function Navbar() {
 
   useEffect(() => {
     if (!menuOpen) return
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
     }
-    document.addEventListener('click', handler)
-    return () => document.removeEventListener('click', handler)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [menuOpen])
 
   const links = [
@@ -58,7 +56,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        <ul ref={menuRef} className={`nav-menu${menuOpen ? ' open' : ''}`}>
+        <ul ref={menuRef} id="primary-navigation" className={`nav-menu${menuOpen ? ' open' : ''}`}>
           {links.map((l) => (
             <li key={l.to}>
               <Link
@@ -80,6 +78,8 @@ export function Navbar() {
           <button
             className="menu-btn"
             aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+            aria-controls="primary-navigation"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <i className={`fa-solid fa-${menuOpen ? 'xmark' : 'bars'}`} />

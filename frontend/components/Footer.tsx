@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+const REPO = 'https://github.com/PrathamWankhade/AIPFL-IDS'
+
 export function Footer() {
   return (
     <footer className="footer">
@@ -11,8 +13,9 @@ export function Footer() {
               AIPFL-IDS
             </div>
             <p>
-              AI Powered Federated Learning Intrusion Detection System
-              for secure IoT environments. Privacy-preserving network security.
+              AI-powered Intrusion Detection System research demo for IoT
+              environments. Federated training is simulated in one process;
+              see the threat model for privacy limitations.
             </p>
           </div>
 
@@ -26,16 +29,15 @@ export function Footer() {
             </div>
             <div>
               <h4>Resources</h4>
-              <a href="#">Documentation</a>
-              <a href="#">Research</a>
-              <a href="#">Dataset</a>
-              <a href="#">GitHub</a>
+              <a href={`${REPO}#readme`}>Documentation</a>
+              <a href={`${REPO}/actions`}>CI Status</a>
+              <a href={REPO}>GitHub</a>
             </div>
             <div>
-              <h4>Contact</h4>
-              <a href="mailto:hello@aipfl-ids.io">Email</a>
-              <a href="#">LinkedIn</a>
-              <a href="#">GitHub</a>
+              <h4>Project</h4>
+              <a href={`${REPO}/blob/main/docs/THREAT_MODEL.md`}>Threat Model</a>
+              <a href={`${REPO}/blob/main/docs/DEPLOYMENT.md`}>Deployment</a>
+              <a href={REPO}>GitHub</a>
             </div>
           </div>
         </div>
@@ -43,9 +45,7 @@ export function Footer() {
         <div className="footer-bottom">
           <p>&copy; 2026 AIPFL-IDS. All Rights Reserved.</p>
           <div className="footer-socials">
-            <a href="#" aria-label="GitHub"><i className="fa-brands fa-github" /></a>
-            <a href="#" aria-label="LinkedIn"><i className="fa-brands fa-linkedin-in" /></a>
-            <a href="#" aria-label="Twitter"><i className="fa-brands fa-x-twitter" /></a>
+            <a href={REPO} aria-label="GitHub repository"><i className="fa-brands fa-github" /></a>
           </div>
         </div>
       </div>
