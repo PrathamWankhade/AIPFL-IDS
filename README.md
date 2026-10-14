@@ -8,7 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#)
 
-Privacy-preserving cybersecurity platform using Deep Learning + Federated Learning to detect malicious IoT network traffic without sharing raw data. Supports **two datasets**: CICIoT2023 (34 classes) and NF-ToN-IoT-V2 (10 classes).
+Privacy-preserving cybersecurity platform using Deep Learning + Federated Learning to detect malicious IoT network traffic without sharing raw data. Supports **two datasets**: CICIoT2023 (34 original labels, mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes).
 
 ---
 
@@ -115,7 +115,7 @@ npm run build && npm start
 
 ```bash
 cd backend
-python train.py --dataset CICIoT2023    # Balanced 5K/class, 34 classes
+python train.py --dataset CICIoT2023    # 34 original labels mapped to 10 categories
 python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 ```
 
@@ -130,17 +130,17 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 | `LEARNING_RATE` | 0.001 | Adam learning rate |
 | `DENSE_UNITS` | [512,256,128] | Hidden layers |
 
-### CICIoT2023 Results
+### CICIoT2023 Results (historical benchmark — reproduce with the released model before citing)
 
 | Metric | Value |
 |--------|-------|
 | Test Accuracy | **71.35%** |
 | Input Features | 39 |
-| Attack Classes | 10 (merged from 34: DDOS, DOS, MIRAI, RECON, BENIGN, DICTIONARYBRUTEFORCE, DNS_SPOOFING, MITM-ARPSPOOFING, VULNERABILITYSCAN, OTHER) |
+| Attack Classes | 10 (merged from 34 original labels: DDOS, DOS, MIRAI, RECON, BENIGN, DICTIONARYBRUTEFORCE, DNS_SPOOFING, MITM-ARPSPOOFING, VULNERABILITYSCAN, OTHER) |
 | Training Samples | 436,321 (balanced, 50K max/class) |
 | Raw Records | 45,019,243 |
 
-### NF-ToN-IoT-V2 Results
+### NF-ToN-IoT-V2 Results (historical benchmark — reproduce with the released model before citing)
 
 | Metric | Value |
 |--------|-------|
@@ -154,7 +154,7 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 
 ## Features
 
-- **Dual-Dataset Architecture**: Separate models for CICIoT2023 (34 classes) and NF-ToN-IoT-V2 (10 classes)
+- **Dual-Dataset Architecture**: CICIoT2023 (34 original labels mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes), with separate scalers, encoders, and models
 - **Robust Preprocessing**: `clip_extreme()` handles extreme byte-rate features (up to 1e+261) using percentile-based clipping
 - **Streaming Batch Loading**: 200K-row batches for memory-efficient processing of 45M+ records
 - **Federated Averaging (FedAvg)**: 10 clients, 10 rounds, weighted aggregation
