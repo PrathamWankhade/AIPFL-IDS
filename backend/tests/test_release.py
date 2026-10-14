@@ -62,3 +62,61 @@ def test_verify_missing_manifest_warns(tmp_path):
     out = rel.verify_release("DS", str(tmp_path / "a"), str(tmp_path / "b"),
                              str(tmp_path / "c"), str(tmp_path / "d"), tmp_path)
     assert "warning" in out
+
+
+def _write_manifest(tmp_path, dataset, digests):
+    import json
+    (tmp_path / f"release_{dataset}.json").write_text(
+        json.dumps({"dataset": dataset, "artifact_sha256": digests}))
+
+
+def test_strict_rejects_incomplete_manifest(tmp_path):
+    import hashlib
+    rel = _load("release")
+    a = tmp_path / "m.bin"
+    a.write_bytes(b"x")
+    _write_manifest(tmp_path, "DS", {"m.bin": hashlib.sha256(b"x").hexdigest()})
+    try:
+        rel.verify_release("DS", str(a), str(tmp_path / "s"),
+                           str(tmp_path / "e"), str(tmp_path / "f"),
+                           tmp_path, require_manifest=True)
+    except ValueError as e:
+        assert "Incomplete" in str(e)
+        return
+    raise AssertionError("incomplete manifest must fail in strict mode")
+
+
+def test_strict_rejects_dataset_mismatch(tmp_path):
+    import hashlib
+    import json
+    rel = _load("release")
+    a = tmp_path / "m.bin"
+    a.write_bytes(b"x")
+    (tmp_path / "release_DS.json").write_text(json.dumps(
+        {"dataset": "OTHER",
+         "artifact_sha256": {"m.bin": hashlib.sha256(b"x").hexdigest()}}))
+    try:
+        rel.verify_release("DS", str(a), str(tmp_path / "s"),
+                           str(tmp_path / "e"), str(tmp_path / "f"),
+                           tmp_path, require_manifest=True)
+    except ValueError as e:
+        assert "dataset" in str(e).lower()
+        return
+    raise AssertionError("dataset mismatch must fail")
+
+
+def test_strict_rejects_malformed_digest(tmp_path):
+    rel = _load("release")
+    a = tmp_path / "m.bin"
+    a.write_bytes(b"x")
+    _write_manifest(tmp_path, "DS", {
+        "m.bin": "not-a-hash",
+        "s": "0" * 64, "e": "1" * 64, "f": "2" * 64})
+    try:
+        rel.verify_release("DS", str(a), str(tmp_path / "s"),
+                           str(tmp_path / "e"), str(tmp_path / "f"),
+                           tmp_path, require_manifest=True)
+    except ValueError as e:
+        assert "Malformed" in str(e)
+        return
+    raise AssertionError("malformed digest must fail")

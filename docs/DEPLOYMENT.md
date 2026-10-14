@@ -34,6 +34,10 @@
 - Release artifacts (`backend/models/`, `backend/results/release_*.json`)
   are trusted, versioned, integrity-checked (sha256 in manifest). Never load
   joblib/pickle artifacts from untrusted sources.
+- Set `AIPFL_REQUIRE_MANIFEST=1` in production: model loading then refuses
+  a missing manifest, an incomplete hash set, a dataset mismatch, or any
+  tampered artifact. A colocated manifest detects mismatch, not forgery —
+  sign it or store its digest separately for stronger authenticity.
 
 ## Environment
 
