@@ -45,7 +45,7 @@ def test_non_iid_partitions_differ():
     assert hist != iid_hist
 
 
-def test_evaluation_metrics():
+def test_evaluation_metrics(tmp_path):
     ev = _load("evaluation")
     n, k = 120, 3
     rng = np.random.default_rng(1)
@@ -63,7 +63,7 @@ def test_evaluation_metrics():
 
     out = ev.evaluate_model(Stub(), np.zeros((n, 4)), y,
                             ["a", "b", "c"], history=None,
-                            save_dir=Path("C:/Users/prath/AppData/Local/Temp/opencode"))
+                            save_dir=tmp_path)
     assert 0.0 <= out["macro_f1"] <= 1.0
     assert 0.0 <= out["ece"] <= 1.0
     assert len(out["per_class"]) == 3

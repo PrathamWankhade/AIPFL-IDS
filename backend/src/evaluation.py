@@ -42,8 +42,11 @@ def benign_false_positive_rate(y_true, y_pred, class_names):
 
 
 def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=None):
+    from pathlib import Path as _Path
     if save_dir is None:
         save_dir = config.RESULTS_DIR
+    save_dir = _Path(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     test_loss, test_accuracy = model.evaluate(X_test, y_test, batch_size=config.BATCH_SIZE, verbose=1)
     print(f"Test Accuracy: {test_accuracy:.4f} | Test Loss: {test_loss:.4f}")
