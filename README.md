@@ -23,7 +23,7 @@ frontend/ (Next.js :3000)        backend/ (Flask :5000)
          +-------- proxy ----------+  /api/config
                                         |
                                     src/ — ML Pipeline
-                                    TensorFlow DNN 512→256→128→64→10/34
+                                    TensorFlow DNN 512→256→128→64→10/10
                                     Dual-model: separate scalers, encoders, models
                                     FedAvg, StandardScaler, LabelEncoder
 ```
@@ -92,7 +92,7 @@ npm run dev          # -> http://localhost:3000
 ```bash
 cd backend
 pip install -r requirements.txt
-python train.py --dataset CICIoT2023  # Train CICIoT2023 model (34 classes)
+python train.py --dataset CICIoT2023  # Train CICIoT2023 model (10 categories)
 python train.py --dataset NF-ToN-IoT-V2  # Train NF-ToN-IoT-V2 model (10 classes)
 python server/app.py # -> http://localhost:5000
 ```

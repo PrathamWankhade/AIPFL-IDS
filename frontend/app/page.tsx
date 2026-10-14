@@ -16,7 +16,7 @@ export default function Home() {
                 <span className="cycle-text" style={{ minWidth: 80 }}>
                   {[...ciciotAttacks, ...nftoniotAttacks].map((a) => <span key={a}>{a}</span>)}
                 </span>
-                <span>&nbsp;Detection Active</span>
+                <span>&nbsp;Research Demo</span>
               </div>
               <h1 className="hero-title reveal">
                 <span
@@ -34,19 +34,20 @@ export default function Home() {
               <p className="hero-description reveal">
                 AIPFL-IDS is an AI-powered Intrusion Detection System for
                 modern IoT environments. It combines Deep Learning and
-                Federated Learning to detect cyber attacks while preserving
-                user privacy.
+                simulated Federated Learning to detect cyber attacks in
+                network traffic. Research demo — no production
+                privacy guarantee.
               </p>
               <div className="hero-buttons reveal">
                 <Link href="/predict" className="btn btn-yellow">
                   <i className="fa-solid fa-bolt" /> Start Detection
                 </Link>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="btn">
+                <a href="https://github.com/PrathamWankhade/AIPFL-IDS" target="_blank" rel="noreferrer" className="btn">
                   <i className="fa-brands fa-github" /> GitHub
                 </a>
               </div>
               <div className="hero-trust reveal">
-                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Privacy Preserving</span>
+                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Simulated Federation</span>
                 <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Federated Learning</span>
                 <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Deep Learning</span>
               </div>
@@ -55,18 +56,19 @@ export default function Home() {
               <div className="hero-dashboard">
                 <div className="dashboard-header">
                   <h3 className="dashboard-title">AI Security Monitor</h3>
-                  <div className="dashboard-live"><span className="live-dot" /> Online</div>
+                  <div className="dashboard-live"><span className="live-dot" /> Demo</div>
                 </div>
                 <div className="dashboard-status">
-                  <small>NF-ToN-V2 Accuracy</small>
+                  <small>NF-ToN-V2 Accuracy (historical)</small>
                   <h2 data-count-to="79.92" data-count-suffix="%">79.92%</h2>
                   <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center', gap: 14 }}>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CICIoT2023: <strong style={{ color: 'var(--black)' }}>71.35%</strong></span>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>Classes: <strong style={{ color: 'var(--black)' }}>34+10</strong></span>
+                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CICIoT2023: <strong style={{ color: 'var(--black)' }}>71.35% (hist.)</strong></span>
+                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>Classes: <strong style={{ color: 'var(--black)' }}>10+10</strong></span>
                   </div>
+                  <small style={{ color: 'var(--text-muted)' }}>Historical benchmarks — live status on /dashboard</small>
                 </div>
                 <div className="metric-grid">
-                  <div className="metric-card"><small>Attack Classes</small><h3>34+10</h3></div>
+                  <div className="metric-card"><small>Attack Classes</small><h3>10+10</h3></div>
                   <div className="metric-card"><small>Features</small><h3>39+41</h3></div>
                   <div className="metric-card"><small>Training Samples</small><h3>537K</h3></div>
                   <div className="metric-card"><small>Fed Clients</small><h3>10</h3></div>
@@ -106,7 +108,7 @@ export default function Home() {
               { num: '02', icon: 'fa-solid fa-scale-balanced', title: 'Per-Class Balance', desc: '50K max/class, 10+10 classes, 814K total balanced' },
               { num: '03', icon: 'fa-solid fa-sliders', title: 'Standard Scaling', desc: '39 + 41 features normalized per dataset' },
               { num: '04', icon: 'fa-solid fa-network-wired', title: 'FedAvg Training', desc: '10 clients, 10 rounds, 3 epochs each' },
-              { num: '05', icon: 'fa-solid fa-chart-bar', title: 'Evaluation', desc: '71.35% / 79.92% accuracy, confusion matrices' },
+              { num: '05', icon: 'fa-solid fa-chart-bar', title: 'Evaluation', desc: 'Historical 71.35% / 79.92% accuracy, confusion matrices' },
               { num: '06', icon: 'fa-solid fa-shield-halved', title: 'Inference', desc: 'Dual-model API with dataset selection' },
             ].map((s, i) => (
               <div key={i} className="pipeline-step reveal">
@@ -132,7 +134,7 @@ export default function Home() {
               { icon: 'fa-brands fa-python', title: 'Python 3.11+', desc: 'Core language for data processing and model training.' },
               { icon: 'fa-solid fa-brain', title: 'TensorFlow / Keras', desc: 'DNN: 512 → 256 → 128 → 10 classes per dataset.' },
               { icon: 'fa-solid fa-flask', title: 'Flask API', desc: '6 REST endpoints for prediction, status, config.' },
-              { icon: 'fa-solid fa-network-wired', title: 'Federated Averaging', desc: 'FedAvg aggregates client weights privately.' },
+              { icon: 'fa-solid fa-network-wired', title: 'Federated Averaging', desc: 'FedAvg aggregates simulated client weights (no secure aggregation yet).' },
               { icon: 'fa-solid fa-table', title: 'Parquet / Pandas', desc: '58M records from two datasets loaded in batches.' },
               { icon: 'fa-brands fa-react', title: 'Next.js 14', desc: 'App router, server components, API proxy.' },
             ].map((t, i) => (
@@ -151,15 +153,15 @@ export default function Home() {
           <div className="section-header reveal">
             <SectionTag>Workflow</SectionTag>
             <h2>How AIPFL-IDS Works</h2>
-            <p>A complete AI pipeline that transforms raw IoT traffic into intelligent predictions while preserving privacy through Federated Learning.</p>
+            <p>A complete AI pipeline that transforms raw IoT traffic into intelligent predictions. Federated training is simulated in one process — see threat model.</p>
           </div>
           <div className="timeline">
             {[
               { num: '01', title: 'Collect & Load', desc: 'CICIoT2023 (45M rows, 10 cls) + NF-ToN-IoT-V2 (13M rows, 10 cls) loaded in streaming batches.' },
               { num: '02', title: 'Preprocess & Balance', desc: '39 / 41 features standardized, class-balanced at 5K / 50K max per class.' },
-              { num: '03', title: 'Federated Training', desc: '10 simulated clients train locally (3 epochs each) — raw data never leaves.' },
+              { num: '03', title: 'Federated Training', desc: '10 simulated clients train locally (3 epochs each) in one process — simulation, not distributed devices.' },
               { num: '04', title: 'Global Aggregation', desc: 'FedAvg merges local weight updates into a global DNN model.' },
-              { num: '05', title: 'Evaluate & Deploy', desc: '71.35% / 79.92% accuracy. Confusion matrices, precision, recall computed.' },
+              { num: '05', title: 'Evaluate & Deploy', desc: 'Historical 71.35% / 79.92% accuracy. Confusion matrices, precision, recall computed.' },
               { num: '06', title: 'Real-Time Inference', desc: 'Flask API serves predictions with dataset selectable via query param.' },
             ].map((s, i) => (
               <div key={i} className="timeline-item reveal">
@@ -180,9 +182,9 @@ export default function Home() {
             <div className="reveal-left">
               <SectionTag>Dashboard</SectionTag>
               <h2 style={{ marginBottom: 12 }}>Monitor Every Network From One Dashboard</h2>
-              <p style={{ marginBottom: 24 }}>View live AI predictions, model performance, attack statistics and network activity.</p>
+              <p style={{ marginBottom: 24 }}>Upload traffic captures for model predictions, and review performance, attack statistics and network activity.</p>
               <ul className="check-list">
-                <li><i className="fa-solid fa-check" /> Live Traffic Monitoring</li>
+                <li><i className="fa-solid fa-check" /> Sample Traffic Analysis</li>
                 <li><i className="fa-solid fa-check" /> Attack Classification</li>
                 <li><i className="fa-solid fa-check" /> Federated Learning Progress</li>
                 <li><i className="fa-solid fa-check" /> AI Performance Metrics</li>
@@ -198,11 +200,11 @@ export default function Home() {
                 <div style={{ padding: 22 }}>
                   <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                     <div style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--yellow)', border: 'var(--border-thick)' }}>
-                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--black)', fontWeight: 700, marginBottom: 2 }}>NF-ToN-V2</small>
+                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--black)', fontWeight: 700, marginBottom: 2 }}>NF-ToN-V2 (hist.)</small>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em' }}>79.92%</span>
                     </div>
                     <div style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg)', border: 'var(--border-thick)' }}>
-                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 2 }}>CICIoT2023</small>
+                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 2 }}>CICIoT2023 (hist.)</small>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>71.35%</span>
                     </div>
                   </div>
@@ -225,7 +227,7 @@ export default function Home() {
                     <text x="200" y="82" fontSize="5" fill="var(--text-muted)" fontFamily="monospace">R10</text>
                   </svg>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                    {[{ l: 'CICIoT Acc', v: '71.35%' }, { l: 'NF-ToN Acc', v: '79.92%' }, { l: 'Classes', v: '10+10' }, { l: 'Clients', v: '10' }].map((c, i) => (
+                    {[{ l: 'CICIoT (hist.)', v: '71.35%' }, { l: 'NF-ToN (hist.)', v: '79.92%' }, { l: 'Classes', v: '10+10' }, { l: 'Clients', v: '10' }].map((c, i) => (
                       <div key={i} style={{ padding: 12, background: 'var(--bg)', border: 'var(--border-thick)', textAlign: 'center' }}>
                         <small style={{ display: 'block', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', marginBottom: 2 }}>{c.l}</small>
                         <strong style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', letterSpacing: '0.06em' }}>{c.v}</strong>
@@ -243,13 +245,13 @@ export default function Home() {
         <div className="container">
           <div className="section-header reveal">
             <SectionTag>Performance</SectionTag>
-            <h2>Real Training Metrics</h2>
-            <p>Actual results from two trained federated DNN models — CICIoT2023 (10 merged classes) and NF-ToN-IoT-V2 (10 classes).</p>
+            <h2>Reported Training Metrics</h2>
+            <p>Historical results from two trained federated DNN models — CICIoT2023 (10 merged categories) and NF-ToN-IoT-V2 (10 classes). Reproduce with the released model before citing.</p>
           </div>
           <div className="grid-4">
             {[
-              { value: '79.92', suffix: '%', label: 'NF-ToN-V2 Accuracy' },
-              { value: '71.35', suffix: '%', label: 'CICIoT2023 Accuracy' },
+              { value: '79.92', suffix: '%', label: 'NF-ToN-V2 Accuracy (hist.)' },
+              { value: '71.35', suffix: '%', label: 'CICIoT2023 Accuracy (hist.)' },
               { value: '537', suffix: 'K', label: 'Total Samples' },
               { value: '44', suffix: '', label: 'Total Classes' },
             ].map((s, i) => (
