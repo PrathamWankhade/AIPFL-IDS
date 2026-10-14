@@ -43,7 +43,13 @@ def verify_release(dataset, model_path, scaler_path, encoder_path, feature_path,
         return {"warning": "no release manifest; loaded without hash verification"}
     with open(manifest_path) as f:
         manifest = json.load(f)
-    if manifest.get("dataset") and manifest["dataset"] != dataset:
+    if strict:
+        if not manifest.get("dataset"):
+            raise ValueError("Strict release manifest is missing the required 'dataset' field.")
+        if manifest["dataset"] != dataset:
+            raise ValueError(
+                f"Manifest dataset '{manifest['dataset']}' does not match '{dataset}'.")
+    elif manifest.get("dataset") and manifest["dataset"] != dataset:
         raise ValueError(
             f"Manifest dataset '{manifest['dataset']}' does not match '{dataset}'.")
     expected = (manifest.get("artifact_sha256") or {})

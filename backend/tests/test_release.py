@@ -86,6 +86,25 @@ def test_strict_rejects_incomplete_manifest(tmp_path):
     raise AssertionError("incomplete manifest must fail in strict mode")
 
 
+def test_strict_rejects_missing_dataset_field(tmp_path):
+    import hashlib
+    import json
+    rel = _load("release")
+    a = tmp_path / "m.bin"
+    a.write_bytes(b"x")
+    (tmp_path / "release_DS.json").write_text(json.dumps(
+        {"artifact_sha256": {"m.bin": hashlib.sha256(b"x").hexdigest(),
+                             "s": "0" * 64, "e": "1" * 64, "f": "2" * 64}}))
+    try:
+        rel.verify_release("DS", str(a), str(tmp_path / "s"),
+                           str(tmp_path / "e"), str(tmp_path / "f"),
+                           tmp_path, require_manifest=True)
+    except ValueError as e:
+        assert "dataset" in str(e).lower()
+        return
+    raise AssertionError("missing dataset field must fail in strict mode")
+
+
 def test_strict_rejects_dataset_mismatch(tmp_path):
     import hashlib
     import json
