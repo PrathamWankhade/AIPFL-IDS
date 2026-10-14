@@ -6,7 +6,10 @@ in-process array splits, not independent organisations/devices.
 ## In scope (implemented)
 
 - Update validation: `weighted_fed_average` rejects empty, zero-sample,
-  shape-mismatched, non-finite, and over-norm updates (`config.MAX_UPDATE_NORM`).
+  shape-mismatched, and non-finite updates. `validate_client_update`
+  additionally bounds the *delta* norm (new − global) per client via
+  `MAX_UPDATE_NORM`; over-norm deltas are skipped, not aggregated. This is
+  malfunction/corruption hygiene, not Byzantine robustness — see below.
 - Partial participation: per-round client sampling (`CLIENT_FRACTION`,
   `MIN_CLIENTS`); rounds with too few valid clients are skipped, counts and
   upload bytes logged in `training_summary_*.json`.
