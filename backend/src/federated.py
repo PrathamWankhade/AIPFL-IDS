@@ -122,6 +122,36 @@ def weighted_fed_average(client_weights, client_sizes):
     return averaged_weights
 
 
+def update_delta_norm(new_weights, global_weights):
+    """L2 norm of the model-update delta (new - global), the quantity a
+    norm guard must bound — not the raw parameter norm."""
+    total = 0.0
+    for w_new, w_old in zip(new_weights, global_weights):
+        d = np.asarray(w_new, dtype=np.float64) - np.asarray(w_old, dtype=np.float64)
+        total += float(np.sum(d * d))
+    return float(np.sqrt(total))
+
+
+def validate_client_update(new_weights, global_weights, max_norm=None):
+    """Reject non-finite or over-norm *deltas*. Returns delta norm."""
+    if max_norm is None:
+        max_norm = config.MAX_UPDATE_NORM
+    if len(new_weights) != len(global_weights):
+        raise ValueError("Update layer count mismatch.")
+    for j, (w_new, w_old) in enumerate(zip(new_weights, global_weights)):
+        w_new = np.asarray(w_new)
+        if np.asarray(w_old).shape != w_new.shape:
+            raise ValueError(f"Update layer {j}: shape mismatch.")
+        if not np.all(np.isfinite(w_new)):
+            raise ValueError(f"Update layer {j}: non-finite values.")
+    norm = update_delta_norm(new_weights, global_weights)
+    if not np.isfinite(norm):
+        raise ValueError("Update delta norm is non-finite.")
+    if norm > max_norm:
+        raise ValueError(f"Update delta norm {norm:.1f} exceeds bound {max_norm}.")
+    return norm
+
+
 def compute_class_weights(y):
     classes = np.unique(y)
     n_samples = len(y)
@@ -145,8 +175,12 @@ def train_client(global_weights, X_client, y_client, input_dim, num_classes, cla
     for w in weights:
         if np.isnan(w).any() or np.isinf(w).any():
             return None
+    try:
+        delta_norm = validate_client_update(weights, global_weights)
+    except ValueError:
+        return None
 
-    return {"weights": weights, "loss": float(loss), "accuracy": float(accuracy), "samples": len(X_client)}
+    return {"weights": weights, "loss": float(loss), "accuracy": float(accuracy), "samples": len(X_client), "delta_norm": float(delta_norm)}
 
 
 def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, global_rounds=None, verbose=True, best_model_path=None, final_model_path=None, class_weight=None, X_test=None, y_test=None, client_fraction=None, min_clients=None, seed=None):

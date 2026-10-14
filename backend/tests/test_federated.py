@@ -66,3 +66,17 @@ def test_partial_participation_contract():
     assert "client_fraction" in sig.parameters and "min_clients" in sig.parameters
     assert 0.0 < config.CLIENT_FRACTION <= 1.0
     assert config.MIN_CLIENTS >= 1
+
+
+def test_delta_norm_guard():
+    import numpy as np
+    g = [np.zeros((2, 2)), np.zeros(2)]
+    small = [np.full((2, 2), 0.1), np.full(2, 0.1)]
+    assert fed.update_delta_norm(small, g) < 1.0
+    assert fed.validate_client_update(small, g, max_norm=10.0) < 10.0
+    big = [np.full((2, 2), 100.0), np.zeros(2)]
+    try:
+        fed.validate_client_update(big, g, max_norm=10.0)
+    except ValueError:
+        return
+    raise AssertionError("over-norm delta should be rejected")
