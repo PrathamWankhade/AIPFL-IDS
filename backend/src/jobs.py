@@ -19,6 +19,8 @@ _MAX_CONCURRENT = int(os.environ.get("AIPFL_MAX_CONCURRENT_JOBS", "2"))
 
 
 _UPLOAD_ROOT: str | None = None
+_BOOT_TIME = time.time()
+STALE_AFTER_SECONDS = float(os.environ.get("AIPFL_JOB_STALE_SECONDS", "3600"))
 
 
 def jobs_dir(upload_dir=None):
@@ -52,13 +54,31 @@ def _write_meta(job_id, data, upload_dir=None):
     p.write_text(json.dumps(data))
 
 
+def _recover_if_stale(job_id, job, upload_dir=None, now=None):
+    """A restart leaves queued/running jobs with no worker. Mark them failed
+    instead of polling forever. Returns the (possibly updated) job."""
+    if not job or job.get("status") not in ("queued", "running"):
+        return job
+    now = now if now is not None else time.time()
+    created = float(job.get("created") or 0)
+    # From a previous process lifetime, or older than the stale horizon.
+    if created < _BOOT_TIME or (now - created) > STALE_AFTER_SECONDS:
+        job = dict(job)
+        job["status"] = "error"
+        job["finished"] = now
+        job["error"] = "Worker restarted or timed out; resubmit the job."
+        _write_meta(job_id, job, upload_dir)
+    return job
+
+
 def active_count(upload_dir=None):
     n = 0
     d = jobs_dir(upload_dir)
     for p in d.glob("*.json"):
         try:
-            st = json.loads(p.read_text()).get("status")
-            if st in ("queued", "running"):
+            job = json.loads(p.read_text())
+            job = _recover_if_stale(p.stem, job, upload_dir)
+            if job.get("status") in ("queued", "running"):
                 n += 1
         except Exception:
             pass
@@ -66,8 +86,6 @@ def active_count(upload_dir=None):
 
 
 def create_job(dataset, filename, upload_dir=None):
-    if active_count(upload_dir) >= _MAX_CONCURRENT:
-        raise RuntimeError(f"Too many active jobs (limit {_MAX_CONCURRENT}). Retry later.")
     job_id = uuid.uuid4().hex
     job = {
         "job_id": job_id, "dataset": dataset, "filename": filename,
@@ -76,13 +94,26 @@ def create_job(dataset, filename, upload_dir=None):
         "error": None, "result_csv": None,
     }
     with _LOCK:
+        # Atomic admission: count and reserve under one lock so concurrent
+        # requests cannot jointly exceed the limit.
+        n = 0
+        d = jobs_dir(upload_dir)
+        for p in d.glob("*.json"):
+            try:
+                if json.loads(p.read_text()).get("status") in ("queued", "running"):
+                    n += 1
+            except Exception:
+                pass
+        if n >= _MAX_CONCURRENT:
+            raise RuntimeError(f"Too many active jobs (limit {_MAX_CONCURRENT}). Retry later.")
         _write_meta(job_id, job, upload_dir)
     return job_id
 
 
 def get_job(job_id, upload_dir=None):
     with _LOCK:
-        return _read_meta(job_id, upload_dir)
+        job = _read_meta(job_id, upload_dir)
+        return _recover_if_stale(job_id, job, upload_dir)
 
 
 def _set(job_id, upload_dir=None, **fields):

@@ -60,3 +60,17 @@ def test_concurrency_bound(tmp_path):
         raise AssertionError("second job while one active should be refused")
     finally:
         jobs._MAX_CONCURRENT = 2
+
+
+def test_stale_job_recovered(tmp_path):
+    import json as _json
+    import time as _time
+    jid = jobs.create_job("CICIoT2023", ".csv", str(tmp_path))
+    meta = tmp_path / "jobs" / f"{jid}.json"
+    job = _json.loads(meta.read_text())
+    job["status"] = "running"
+    job["created"] = _time.time() - (jobs.STALE_AFTER_SECONDS + 10)
+    meta.write_text(_json.dumps(job))
+    view = jobs.public_view(jobs.get_job(jid, str(tmp_path)))
+    assert view["status"] == "error"
+    assert "resubmit" in (view["error"] or "").lower()
