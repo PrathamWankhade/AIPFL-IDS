@@ -65,6 +65,8 @@ RANDOM_STATE = SEED
 MIXED_PRECISION = "mixed_float16"
 CLIENT_PARTITION = os.environ.get("AIPFL_PARTITION", "iid")
 DIRICHLET_ALPHA = float(os.environ.get("AIPFL_ALPHA", "0.5"))
+CLIENT_FRACTION = float(os.environ.get("AIPFL_CLIENT_FRACTION", "1.0"))
+MIN_CLIENTS = int(os.environ.get("AIPFL_MIN_CLIENTS", "1"))
 
 # ── Server ─────────────────────────────────────────────────────────
 MAX_FILE_SIZE_MB = int(os.environ.get("AIPFL_MAX_FILE_MB", "50"))

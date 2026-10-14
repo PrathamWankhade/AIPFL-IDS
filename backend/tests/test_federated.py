@@ -58,3 +58,11 @@ def test_split_contract_documented():
     import inspect
     sig = inspect.signature(fed.federated_training_loop)
     assert "X_val" in sig.parameters and "y_val" in sig.parameters
+
+
+def test_partial_participation_contract():
+    import inspect
+    sig = inspect.signature(fed.federated_training_loop)
+    assert "client_fraction" in sig.parameters and "min_clients" in sig.parameters
+    assert 0.0 < config.CLIENT_FRACTION <= 1.0
+    assert config.MIN_CLIENTS >= 1

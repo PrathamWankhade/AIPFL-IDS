@@ -149,13 +149,18 @@ def train_client(global_weights, X_client, y_client, input_dim, num_classes, cla
     return {"weights": weights, "loss": float(loss), "accuracy": float(accuracy), "samples": len(X_client)}
 
 
-def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, global_rounds=None, verbose=True, best_model_path=None, final_model_path=None, class_weight=None, X_test=None, y_test=None):
+def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, global_rounds=None, verbose=True, best_model_path=None, final_model_path=None, class_weight=None, X_test=None, y_test=None, client_fraction=None, min_clients=None, seed=None):
     if global_rounds is None:
         global_rounds = config.GLOBAL_ROUNDS
     if best_model_path is None:
         best_model_path = config.CICIOT2023_BEST_PATH
     if final_model_path is None:
         final_model_path = config.CICIOT2023_MODEL_PATH
+    if client_fraction is None:
+        client_fraction = getattr(config, "CLIENT_FRACTION", 1.0)
+    if min_clients is None:
+        min_clients = getattr(config, "MIN_CLIENTS", 1)
+    rng = np.random.default_rng(seed if seed is not None else config.SEED)
 
     global_weights = global_model.get_weights()
     best_accuracy = 0.0
@@ -163,7 +168,12 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
     history = {"global_accuracy": [], "global_loss": [], "client_train_accuracy": [], "client_train_loss": [],
                # backward-compat aliases
                "client_accuracy": [], "client_loss": [],
-               "val_accuracy": [], "val_loss": []}
+               "val_accuracy": [], "val_loss": [],
+               "participating_clients": [], "comm_bytes_upload": []}
+
+    num_available = len(clients)
+    per_round = max(int(min_clients), int(round(num_available * client_fraction)))
+    per_round = max(1, min(num_available, per_round))
 
     for round_num in range(1, global_rounds + 1):
         if verbose:
@@ -173,8 +183,24 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
 
         client_results = []
 
-        for client_id, (X_c, y_c) in enumerate(clients):
-            result = train_client(global_weights, X_c, y_c, input_dim, num_classes, class_weight=class_weight)
+        # Partial participation: sample a reproducible subset per round so
+        # dropout tolerance is measurable instead of assumed.
+        round_idx = rng.permutation(num_available)[:per_round]
+        if verbose and per_round < num_available:
+            print(f"  Participation: {per_round}/{num_available} clients sampled")
+
+        for client_id in [int(i) for i in round_idx]:
+            X_c, y_c = clients[client_id]
+            if len(X_c) == 0:
+                if verbose:
+                    print(f"  Client {client_id+1:02d}: SKIPPED (empty partition)")
+                continue
+            try:
+                result = train_client(global_weights, X_c, y_c, input_dim, num_classes, class_weight=class_weight)
+            except Exception as e:
+                if verbose:
+                    print(f"  Client {client_id+1:02d}: SKIPPED ({type(e).__name__}: {e})")
+                continue
             if result is None:
                 if verbose:
                     print(f"  Client {client_id+1:02d}: SKIPPED (invalid weights)")
@@ -182,6 +208,13 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
             client_results.append(result)
             if verbose:
                 print(f"  Client {client_id+1:02d}: loss={result['loss']:.4f}  acc={result['accuracy']:.4f}")
+
+        if len(client_results) < min_clients:
+            if verbose:
+                print(f"Only {len(client_results)} valid clients (< min {min_clients}). Skipping round.")
+            history["participating_clients"].append(0)
+            history["comm_bytes_upload"].append(0)
+            continue
 
         if not client_results:
             if verbose:
@@ -218,6 +251,9 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
         history["client_train_accuracy"].append(avg_client_acc)
         history["client_loss"].append(avg_client_loss)
         history["client_accuracy"].append(avg_client_acc)
+        history["participating_clients"].append(len(client_results))
+        history["comm_bytes_upload"].append(int(sum(
+            sum(np.asarray(w).nbytes for w in r["weights"]) for r in client_results)))
 
         if verbose:
             print(f"\n  Round Summary (client metrics = TRAIN metrics):")

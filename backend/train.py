@@ -153,6 +153,7 @@ def main():
     ap.add_argument("--seed", type=int, default=None, help="Override AIPFL_SEED for reproducibility runs")
     ap.add_argument("--partition", choices=["iid", "label_skew", "quantity_skew"], default=None)
     ap.add_argument("--alpha", type=float, default=None, help="Dirichlet alpha for non-IID partitions")
+    ap.add_argument("--client-fraction", type=float, default=None, help="Fraction of clients sampled per round")
     args = ap.parse_args()
     dataset = args.dataset
     if args.seed is not None:
@@ -160,6 +161,7 @@ def main():
         config.RANDOM_STATE = args.seed
     partition = args.partition or config.CLIENT_PARTITION
     alpha = args.alpha if args.alpha is not None else config.DIRICHLET_ALPHA
+    client_fraction = args.client_fraction if args.client_fraction is not None else config.CLIENT_FRACTION
 
     setup_environment()
     print(f"\n{'#'*60}\nTraining on {dataset}\n{'#'*60}")
@@ -240,7 +242,7 @@ def main():
     global_model.summary()
 
     print(f"\nTraining: {config.GLOBAL_ROUNDS} rounds, {config.EPOCHS_PER_CLIENT} epochs/client, {config.NUM_CLIENTS} clients, lr={config.LEARNING_RATE}")
-    result = federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, verbose=True, best_model_path=best_path, final_model_path=model_path)
+    result = federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, verbose=True, best_model_path=best_path, final_model_path=model_path, client_fraction=client_fraction, seed=config.SEED)
 
     # Final held-out evaluation runs ONCE on test (never used for selection).
     eval_results = evaluate_model(result["model"], X_test, y_test, class_names, history=result["history"])
@@ -271,8 +273,11 @@ def main():
         "ece": eval_results.get("ece"),
         "benign_fpr": eval_results.get("benign_fpr"),
         "per_class": eval_results.get("per_class"),
+        "participating_clients": result["history"].get("participating_clients", []),
+        "comm_bytes_upload": result["history"].get("comm_bytes_upload", []),
         "partition": partition,
         "dirichlet_alpha": alpha,
+        "client_fraction": client_fraction,
         "client_sizes": [int(s) for s in client_sizes],
         "client_label_histograms": [{str(k): int(v) for k, v in h.items()} for h in hist],
         "input_dim": int(input_dim),
