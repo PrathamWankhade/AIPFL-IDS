@@ -885,6 +885,20 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 
 .dash-card-full { grid-column: 1 / -1; }
 
+/* Illustrative reference zone: visually distinct from live/stored data. */
+.dash-illustrative {
+  border-style: dashed;
+  box-shadow: none;
+  background: transparent;
+}
+.dash-illustrative .dash-list-item { background: transparent; }
+
+/* Visible keyboard focus everywhere (accessibility baseline). */
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .dash-card h3 {
   font-size: 0.8rem;
   font-weight: 700;

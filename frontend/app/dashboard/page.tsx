@@ -11,6 +11,20 @@ interface StatusData {
   datasets?: Record<string, { model_loaded: boolean; num_classes: number; input_dim: number }>
 }
 
+function ZoneLabel({ kind, children }: { kind: 'live' | 'stored' | 'illustrative'; children?: React.ReactNode }) {
+  const styles: Record<string, React.CSSProperties> = {
+    live: { background: 'var(--turquoise)', color: 'var(--black-pure)' },
+    stored: { background: 'var(--blue)', color: 'var(--white-pure)' },
+    illustrative: { background: 'transparent', color: 'var(--text-muted)', borderStyle: 'dashed' },
+  }
+  return (
+    <span className="tag" style={{ ...styles[kind], fontSize: '0.6rem' }}>
+      {kind === 'live' ? 'Live API' : kind === 'stored' ? 'Stored evaluation' : 'Illustrative reference'}
+      {children ? ` · ${children}` : ''}
+    </span>
+  )
+}
+
 export default function Dashboard() {
   const [status, setStatus] = useState<StatusData | null>(null)
   const [models, setModels] = useState<{ models: { name: string; dataset: string; size_bytes: number }[] } | null>(null)
@@ -46,6 +60,7 @@ export default function Dashboard() {
   const mCici = metrics?.CICIoT2023?.training_summary
   const mNfton = metrics?.['NF-ToN-IoT-V2']?.training_summary
   const fmt = (v: any, digits = 2) => (typeof v === 'number' ? (v * 100).toFixed(digits) : '—')
+  const fmtMacro = (m: any) => (m?.macro_f1 != null ? `${(m.macro_f1 * 100).toFixed(1)}%` : 'Not measured')
 
   const events: { text: string; time: string }[] = []
   if (status?.timestamp) events.push({ text: `Backend status fetched (${status.status || 'online'})`, time: status.timestamp })
@@ -61,31 +76,46 @@ export default function Dashboard() {
     <section className="page-dashboard">
       <div className="container">
         <div className="reveal" style={{ marginBottom: 36 }}>
-          <SectionTag icon="fa-solid fa-chart-line">Live Dashboard</SectionTag>
-          <h1 style={{ marginTop: 10 }}>Monitor Your Network Security</h1>
-          <p style={{ maxWidth: 600, marginTop: 6 }}>Operational state is read from the API. Benchmark scores below are reported values, not live measurements.</p>
+          <SectionTag icon="fa-solid fa-chart-line">Operations Dashboard</SectionTag>
+          <h1 style={{ marginTop: 10 }}>System Status &amp; Model Evaluation</h1>
+          <p style={{ maxWidth: 640, marginTop: 6 }}>
+            Live backend state, stored evaluation metrics, and illustrative reference data are shown in
+            separate labeled zones. Nothing here monitors live network traffic.
+          </p>
         </div>
 
         <div className="dash-header">
-          <h1>Security Overview</h1>
+          <h1>Backend Status</h1>
           <span className={`tag ${anyLoaded ? 'tag-turquoise' : 'tag-orange'}`}>
-            {loading ? 'Checking backend…' : anyLoaded ? 'System Online' : 'Model Unavailable'}
+            {loading ? 'Checking backend…' : anyLoaded ? 'Backend Reachable' : 'Backend Unreachable'}
           </span>
         </div>
 
-        {loading && <div className="alert">Loading live status…</div>}
-        {error && <div className="alert alert-danger">Backend unreachable: {error}. Showing reported benchmarks only.</div>}
+        {loading && <div className="alert" role="status">Loading live status…</div>}
+        {error && <div className="alert alert-danger" role="alert">Backend unreachable: {error}. Live values below show “Not measured”.</div>}
 
+        {/* Zone A — live API state */}
+        <h2 style={{ fontSize: '1rem', marginBottom: 12 }}><ZoneLabel kind="live">from /api/status</ZoneLabel></h2>
         <div className="grid-4" style={{ marginBottom: 36 }}>
-          <DashboardMetric label="CICIoT2023 test acc" value={mCici ? fmt(mCici.test_accuracy) : '—'} change={mCici ? `macro-F1 ${(mCici.macro_f1 != null ? (mCici.macro_f1 * 100).toFixed(1) : '—')}% · ${mCici.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
-          <DashboardMetric label="NF-ToN-V2 test acc" value={mNfton ? fmt(mNfton.test_accuracy) : '—'} change={mNfton ? `macro-F1 ${(mNfton.macro_f1 != null ? (mNfton.macro_f1 * 100).toFixed(1) : '—')}% · ${mNfton.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
-          <DashboardMetric label="CICIoT2023 live" value={cici ? String(cici.num_classes) : '—'} change={cici ? (cici.model_loaded ? `Loaded, ${cici.input_dim} features` : 'Not loaded') : 'Not measured'} />
-          <DashboardMetric label="NF-ToN-V2 live" value={nfton ? String(nfton.num_classes) : '—'} change={nfton ? (nfton.model_loaded ? `Loaded, ${nfton.input_dim} features` : 'Not loaded') : 'Not measured'} />
+          <DashboardMetric label="Models loaded" value={loading ? '…' : anyLoaded ? '1–2' : '0'} change={anyLoaded ? 'At least one model ready' : 'Not measured'} />
+          <DashboardMetric label="CICIoT2023" value={cici ? String(cici.num_classes) : '—'} change={cici ? (cici.model_loaded ? `Loaded · ${cici.input_dim} features` : 'Not loaded') : 'Not measured'} />
+          <DashboardMetric label="NF-ToN-V2" value={nfton ? String(nfton.num_classes) : '—'} change={nfton ? (nfton.model_loaded ? `Loaded · ${nfton.input_dim} features` : 'Not loaded') : 'Not measured'} />
+          <DashboardMetric label="Artifacts" value={models?.models?.length != null ? String(models.models.length) : '—'} change={models ? 'From /api/models' : 'Not measured'} />
+        </div>
+
+        {/* Zone B — stored evaluation metrics */}
+        <h2 style={{ fontSize: '1rem', marginBottom: 12 }}><ZoneLabel kind="stored">from /api/metrics · historical test runs</ZoneLabel></h2>
+        <div className="grid-4" style={{ marginBottom: 36 }}>
+          <DashboardMetric label="CICIoT2023 test acc" value={mCici ? fmt(mCici.test_accuracy) : '—'} change={mCici ? `macro-F1 ${fmtMacro(mCici)} · ${mCici.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
+          <DashboardMetric label="NF-ToN-V2 test acc" value={mNfton ? fmt(mNfton.test_accuracy) : '—'} change={mNfton ? `macro-F1 ${fmtMacro(mNfton)} · ${mNfton.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
+          <DashboardMetric label="CICIoT2023 ECE" value={mCici?.ece != null ? mCici.ece.toFixed(3) : '—'} change={mCici ? 'Lower is better calibrated' : 'Not measured'} />
+          <DashboardMetric label="NF-ToN-V2 ECE" value={mNfton?.ece != null ? mNfton.ece.toFixed(3) : '—'} change={mNfton ? 'Lower is better calibrated' : 'Not measured'} />
         </div>
 
         <div className="dash-main-grid">
-          <div className="dash-card dash-card-full">
-            <h3>Attack Distribution <small>CICIoT2023 (10 merged classes, demo data)</small></h3>
+          {/* Zone C — illustrative reference, visually distinct */}
+          <div className="dash-card dash-card-full dash-illustrative">
+            <h3>Attack Distribution <ZoneLabel kind="illustrative">demo data, not live incidents</ZoneLabel></h3>
             <div className="dash-list">
               {[
                 { name: 'DDOS Attacks', count: '10 types' },
@@ -104,17 +134,17 @@ export default function Dashboard() {
           </div>
 
           <div className="dash-card">
-            <h3>Model Status <small>live from /api/status</small></h3>
+            <h3>Model Readiness <small><ZoneLabel kind="live" /></small></h3>
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 6, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', color: anyLoaded ? 'var(--turquoise)' : 'var(--orange)' }}>
-                {loading ? '…' : anyLoaded ? 'ACTIVE' : 'OFFLINE'}
+                {loading ? '…' : anyLoaded ? 'READY' : 'NOT READY'}
               </div>
-              <small>{loading ? 'Checking…' : anyLoaded ? 'At least one model loaded' : 'Not Loaded'}</small>
+              <small>{loading ? 'Checking…' : anyLoaded ? 'At least one model loaded' : 'No model loaded'}</small>
             </div>
           </div>
 
           <div className="dash-card dash-card-full">
-            <h3>Activity Feed <small>live API state, not incidents</small></h3>
+            <h3>Recent API Events <small><ZoneLabel kind="live">not security incidents</ZoneLabel></small></h3>
             <div className="dash-list">
               {events.length === 0 && (
                 <div className="dash-list-item"><span>{loading ? 'Loading…' : 'No live events — backend unreachable'}</span><span /></div>
@@ -126,7 +156,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            <small style={{ color: 'var(--text-muted)' }}>Predictions are model outputs, not confirmed incidents. Confirm alerts before action.</small>
+            <small style={{ color: 'var(--text-muted)' }}>Predictions are uncalibrated model outputs, not confirmed incidents. Confirm alerts before action.</small>
           </div>
         </div>
       </div>
