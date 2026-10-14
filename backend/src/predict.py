@@ -31,13 +31,27 @@ class PredictService:
     def load(self):
         if self._loaded:
             return
-        # Prefer best-val checkpoint when it exists so the deployed model
-        # matches the selected checkpoint (audit P1). Fall back to final.
+        # The serving path IS the promoted best-val checkpoint (train.py
+        # copies best -> final before evaluating). No silent fallback: a
+        # missing final with a stale best present is a failed release.
+        from src.release import verify_release
+        if self.dataset == "CICIoT2023":
+            scaler_path, encoder_path, feature_path = (
+                config.CICIOT2023_SCALER, config.CICIOT2023_ENCODER, config.CICIOT2023_FEATURES)
+        else:
+            scaler_path, encoder_path, feature_path = (
+                config.NFTONIOTV2_SCALER, config.NFTONIOTV2_ENCODER, config.NFTONIOTV2_FEATURES)
         model_path = self._model_path
-        if self._best_model_path.exists() and not model_path.exists():
-            model_path = self._best_model_path
         if not model_path.exists():
+            if self._best_model_path.exists():
+                raise FileNotFoundError(
+                    f"Serving model missing at {model_path} but stale best checkpoint exists. "
+                    "Retrain to promote a complete release; refusing to serve a partial run.")
             raise FileNotFoundError(f"Model not found at {self._model_path} for {self.dataset}. Run train.py first.")
+        self.manifest = verify_release(
+            self.dataset, model_path, scaler_path, encoder_path, feature_path, config.RESULTS_DIR)
+        if isinstance(self.manifest, dict) and self.manifest.get("warning"):
+            log.warning(f"[{self.dataset}] {self.manifest['warning']}")
         self.model = tf.keras.models.load_model(str(model_path))
         loaded = load_preprocessing_artifacts(self.dataset)
         # Backward compat: old loader returned 3-tuple, new returns 4-tuple.
