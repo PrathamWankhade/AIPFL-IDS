@@ -1,57 +1,61 @@
+async function fetchJson(path: string, init?: RequestInit, timeoutMs = 30000) {
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(path, { ...init, signal: ctrl.signal })
+    const ctype = res.headers.get('content-type') || ''
+    if (!ctype.includes('application/json')) {
+      const text = await res.text()
+      throw new Error(`Server returned ${res.status} (non-JSON). ${text.slice(0, 120)}`)
+    }
+    const json = await res.json()
+    if (!res.ok || !json.success) {
+      const err: any = new Error(json.error || `Request failed (${res.status})`)
+      err.status = res.status
+      throw err
+    }
+    return json.data
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw new Error('Request timed out')
+    throw e
+  } finally {
+    clearTimeout(t)
+  }
+}
+
 const api = {
-  async getStatus() {
-    const res = await fetch('/api/status')
-    if (!res.ok) throw new Error('Failed to fetch status')
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Failed to fetch status')
-    return json.data
+  getStatus() {
+    return fetchJson('/api/status')
   },
-
-  async getHealth() {
-    const res = await fetch('/api/health')
-    if (!res.ok) throw new Error('Failed to fetch health')
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Failed to fetch health')
-    return json.data
+  getHealth() {
+    return fetchJson('/api/health')
   },
-
-  async getModels() {
-    const res = await fetch('/api/models')
-    if (!res.ok) throw new Error('Failed to fetch models')
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Failed to fetch models')
-    return json.data
+  getReadiness() {
+    return fetchJson('/api/readyz')
   },
-
-  async getConfig() {
-    const res = await fetch('/api/config')
-    if (!res.ok) throw new Error('Failed to fetch config')
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Failed to fetch config')
-    return json.data
+  getModels() {
+    return fetchJson('/api/models')
   },
-
-  async predictFile(file: File) {
+  getConfig() {
+    return fetchJson('/api/config')
+  },
+  getMetrics() {
+    return fetchJson('/api/metrics')
+  },
+  predictFile(file: File, dataset = 'CICIoT2023') {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await fetch('/api/predict', {
+    return fetchJson(`/api/predict?dataset=${encodeURIComponent(dataset)}`, {
       method: 'POST',
       body: formData,
-    })
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Prediction failed')
-    return json.data
+    }, 120000)
   },
-
-  async predictBatch(features: Record<string, any>[]) {
-    const res = await fetch('/api/predict-batch', {
+  predictBatch(features: Record<string, any>[]) {
+    return fetchJson('/api/predict-batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ features }),
     })
-    const json = await res.json()
-    if (!json.success) throw new Error(json.error || 'Batch prediction failed')
-    return json.data
   },
 }
 

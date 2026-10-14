@@ -13,9 +13,9 @@ export default function About() {
         <div className="about-stats">
           {[
             { value: '13M', label: 'Dataset Records' },
-            { value: '99.2%', label: 'Precision' },
+            { value: '79.85%', label: 'Test Accuracy' },
             { value: '10', label: 'Attack Classes' },
-            { value: '20', label: 'Global Rounds' },
+            { value: '10', label: 'Global Rounds' },
           ].map((s, i) => (
             <div key={i} className="about-stat reveal">
               <h3>{s.value}</h3>
@@ -51,7 +51,7 @@ export default function About() {
             { num: '02', title: 'Preprocessing & Feature Engineering', desc: 'Unstable features are removed, infinite values are handled via median imputation, constant features are eliminated using VarianceThreshold, and all features are standardized using StandardScaler.' },
             { num: '03', title: 'Federated Training', desc: 'The dataset is split among 10 simulated clients. Each client trains a deep neural network locally for 3 epochs per global round. Only model weights — never data — are shared with the central server.' },
             { num: '04', title: 'Federated Averaging (FedAvg)', desc: 'The central server aggregates client updates using weighted Federated Averaging. Larger client datasets contribute proportionally more. Invalid updates are discarded for stability.' },
-            { num: '05', title: 'AI Prediction & Evaluation', desc: 'The global model achieves ~99% precision and ~98% accuracy, classifying 10 attack types including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
+            { num: '05', title: 'AI Prediction & Evaluation', desc: 'The global model achieves 79.85% test accuracy across 10 attack types including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
           ].map((s, i) => (
             <div key={i} className="timeline-item reveal">
               <div className="timeline-number">{s.num}</div>
@@ -85,7 +85,7 @@ export default function About() {
             <ul className="check-list" style={{ marginTop: 14 }}>
               <li><i className="fa-solid fa-check" /> Optimizer: Adam (lr=0.0005, clipnorm=1.0)</li>
               <li><i className="fa-solid fa-check" /> Loss: Sparse Categorical Crossentropy</li>
-              <li><i className="fa-solid fa-check" /> 10 clients, 20 global communication rounds</li>
+              <li><i className="fa-solid fa-check" /> 10 clients, 10 global communication rounds</li>
               <li><i className="fa-solid fa-check" /> 3 local epochs per round per client</li>
               <li><i className="fa-solid fa-check" /> Mixed Precision (float16) for GPU efficiency</li>
               <li><i className="fa-solid fa-check" /> EarlyStopping & ReduceLROnPlateau callbacks</li>
@@ -100,10 +100,10 @@ export default function About() {
         </div>
         <div className="grid-4">
           {[
-            { value: '98.7', suffix: '%', label: 'Detection Accuracy' },
-            { value: '99.2', suffix: '%', label: 'Precision' },
-            { value: '97.8', suffix: '%', label: 'Recall' },
-            { value: '18', suffix: 'ms', label: 'Average Latency' },
+            { value: '79.85', suffix: '%', label: 'Test Accuracy' },
+            { value: '377', suffix: 'K', label: 'Training Samples' },
+            { value: '39', suffix: '', label: 'Input Features' },
+            { value: '10', suffix: '', label: 'Fed Clients' },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal">
               <h2 className="stat-number" data-count-to={s.value} data-count-suffix={s.suffix}>{s.value}{s.suffix}</h2>

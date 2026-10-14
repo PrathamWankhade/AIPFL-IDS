@@ -5,14 +5,57 @@ import { SectionTag } from '@/components/SectionTag'
 import { DashboardMetric } from '@/components/DashboardMetric'
 import api from '@/lib/api'
 
+interface StatusData {
+  status?: string
+  timestamp?: string
+  datasets?: Record<string, { model_loaded: boolean; num_classes: number; input_dim: number }>
+}
+
 export default function Dashboard() {
-  const [modelLoaded, setModelLoaded] = useState<boolean | null>(null)
+  const [status, setStatus] = useState<StatusData | null>(null)
+  const [models, setModels] = useState<{ models: { name: string; dataset: string; size_bytes: number }[] } | null>(null)
+  const [metrics, setMetrics] = useState<Record<string, { training_summary: any; release: any }> | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getStatus()
-      .then((d) => setModelLoaded(d.model_loaded))
-      .catch(() => setModelLoaded(false))
+    let cancelled = false
+    Promise.all([
+      api.getStatus().catch((e) => { throw e }),
+      api.getModels().catch(() => null),
+      api.getMetrics().catch(() => null),
+    ])
+      .then(([s, m, met]) => {
+        if (cancelled) return
+        setStatus(s)
+        if (m) setModels(m)
+        if (met?.metrics) setMetrics(met.metrics)
+        setLoading(false)
+      })
+      .catch((e: any) => {
+        if (cancelled) return
+        setError(e.message || 'Backend unreachable')
+        setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [])
+
+  const cici = status?.datasets?.CICIoT2023
+  const nfton = status?.datasets?.['NF-ToN-IoT-V2']
+  const anyLoaded = Boolean(cici?.model_loaded || nfton?.model_loaded)
+  const mCici = metrics?.CICIoT2023?.training_summary
+  const mNfton = metrics?.['NF-ToN-IoT-V2']?.training_summary
+  const fmt = (v: any, digits = 2) => (typeof v === 'number' ? (v * 100).toFixed(digits) : '—')
+
+  const events: { text: string; time: string }[] = []
+  if (status?.timestamp) events.push({ text: `Backend status fetched (${status.status || 'online'})`, time: status.timestamp })
+  if (cici) events.push({ text: `CICIoT2023 model ${cici.model_loaded ? 'loaded' : 'not loaded'} — ${cici.num_classes} classes, ${cici.input_dim} features`, time: 'live' })
+  if (nfton) events.push({ text: `NF-ToN-IoT-V2 model ${nfton.model_loaded ? 'loaded' : 'not loaded'} — ${nfton.num_classes} classes, ${nfton.input_dim} features`, time: 'live' })
+  if (models?.models?.length) {
+    for (const m of models.models.slice(0, 6)) {
+      events.push({ text: `${m.name} (${m.dataset}, ${(m.size_bytes / 1024).toFixed(0)} KB)`, time: 'artifact' })
+    }
+  }
 
   return (
     <section className="page-dashboard">
@@ -20,44 +63,37 @@ export default function Dashboard() {
         <div className="reveal" style={{ marginBottom: 36 }}>
           <SectionTag icon="fa-solid fa-chart-line">Live Dashboard</SectionTag>
           <h1 style={{ marginTop: 10 }}>Monitor Your Network Security</h1>
-          <p style={{ maxWidth: 600, marginTop: 6 }}>Real-time AI-powered threat monitoring with Federated Learning metrics.</p>
+          <p style={{ maxWidth: 600, marginTop: 6 }}>Operational state is read from the API. Benchmark scores below are reported values, not live measurements.</p>
         </div>
 
         <div className="dash-header">
           <h1>Security Overview</h1>
-          <span className={`tag ${modelLoaded ? 'tag-turquoise' : 'tag-orange'}`}>
-            {modelLoaded ? 'System Online' : 'Model Unavailable'}
+          <span className={`tag ${anyLoaded ? 'tag-turquoise' : 'tag-orange'}`}>
+            {loading ? 'Checking backend…' : anyLoaded ? 'System Online' : 'Model Unavailable'}
           </span>
         </div>
 
+        {loading && <div className="alert">Loading live status…</div>}
+        {error && <div className="alert alert-danger">Backend unreachable: {error}. Showing reported benchmarks only.</div>}
+
         <div className="grid-4" style={{ marginBottom: 36 }}>
-          <DashboardMetric label="Detection Accuracy" value="98.7" change="↑ 0.3% from last round">%</DashboardMetric>
-          <DashboardMetric label="Active Clients" value="10" change="All clients online" />
-          <DashboardMetric label="Global Rounds" value="20" change="Training completed" />
-          <DashboardMetric label="Avg Latency" value="18" change="Fast inference">ms</DashboardMetric>
+          <DashboardMetric label="CICIoT2023 test acc" value={mCici ? fmt(mCici.test_accuracy) : '—'} change={mCici ? `macro-F1 ${(mCici.macro_f1 != null ? (mCici.macro_f1 * 100).toFixed(1) : '—')}% · ${mCici.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
+          <DashboardMetric label="NF-ToN-V2 test acc" value={mNfton ? fmt(mNfton.test_accuracy) : '—'} change={mNfton ? `macro-F1 ${(mNfton.macro_f1 != null ? (mNfton.macro_f1 * 100).toFixed(1) : '—')}% · ${mNfton.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
+          <DashboardMetric label="CICIoT2023 live" value={cici ? String(cici.num_classes) : '—'} change={cici ? (cici.model_loaded ? `Loaded, ${cici.input_dim} features` : 'Not loaded') : 'Not measured'} />
+          <DashboardMetric label="NF-ToN-V2 live" value={nfton ? String(nfton.num_classes) : '—'} change={nfton ? (nfton.model_loaded ? `Loaded, ${nfton.input_dim} features` : 'Not loaded') : 'Not measured'} />
         </div>
 
         <div className="dash-main-grid">
           <div className="dash-card dash-card-full">
-            <h3>Threat Monitor <small>Real-time analysis</small></h3>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140, marginBottom: 16 }}>
-              {[30, 55, 85, 65, 95, 70, 45, 60].map((h, i) => (
-                <div key={i} style={{ flex: 1, background: 'var(--blue)', height: `${h}%`, animation: `bar-rise 0.4s ease-out ${i * 0.08}s both, bar-pulse 2s ease-in-out ${i * 0.3 + 2}s infinite`, transformOrigin: 'bottom' }} />
-              ))}
-            </div>
-            <span className="threat-level low"><span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--black)' }} /> Low Threat Level</span>
-          </div>
-
-          <div className="dash-card">
-            <h3>Attack Distribution</h3>
+            <h3>Attack Distribution <small>CICIoT2023 (10 merged classes, demo data)</small></h3>
             <div className="dash-list">
               {[
-                { name: 'Benign', count: '180K' },
-                { name: 'DDoS', count: '50K' },
-                { name: 'DoS', count: '50K' },
-                { name: 'Scanning', count: '50K' },
-                { name: 'Injection', count: '12K' },
-                { name: 'Ransomware', count: '3.4K' },
+                { name: 'DDOS Attacks', count: '10 types' },
+                { name: 'DOS Attacks', count: '4 types' },
+                { name: 'MIRAI Variants', count: '3 types' },
+                { name: 'RECON Attacks', count: '4 types' },
+                { name: 'Web Attacks', count: '4 types' },
+                { name: 'Other', count: '9 types' },
               ].map((a, i) => (
                 <div key={i} className="dash-list-item">
                   <span>{a.name}</span>
@@ -68,41 +104,29 @@ export default function Dashboard() {
           </div>
 
           <div className="dash-card">
-            <h3>Federated Learning Progress</h3>
-            <div className="dash-list">
-              <div className="dash-list-item"><span>Global Rounds</span><span>20 / 20</span></div>
-              <div className="dash-list-item"><span>Clients Participated</span><span>10 / 10</span></div>
-              <div className="dash-list-item"><span>Best Accuracy</span><span>98.7%</span></div>
-            </div>
-          </div>
-
-          <div className="dash-card">
-            <h3>Model Status</h3>
+            <h3>Model Status <small>live from /api/status</small></h3>
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 6, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', color: modelLoaded ? 'var(--turquoise)' : 'var(--orange)' }}>
-                {modelLoaded ? 'ACTIVE' : 'OFFLINE'}
+              <div style={{ fontSize: '2.5rem', marginBottom: 6, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', color: anyLoaded ? 'var(--turquoise)' : 'var(--orange)' }}>
+                {loading ? '…' : anyLoaded ? 'ACTIVE' : 'OFFLINE'}
               </div>
-              <small>{modelLoaded ? 'Federated Model v1.0' : 'Not Loaded'}</small>
+              <small>{loading ? 'Checking…' : anyLoaded ? 'At least one model loaded' : 'Not Loaded'}</small>
             </div>
           </div>
 
           <div className="dash-card dash-card-full">
-            <h3>Activity Feed <small>Recent events</small></h3>
+            <h3>Activity Feed <small>live API state, not incidents</small></h3>
             <div className="dash-list">
-              {[
-                { text: 'Model prediction completed — Normal traffic', time: 'Just now' },
-                { text: 'Federated round 20 aggregated successfully', time: '2 min ago' },
-                { text: 'DDoS pattern detected on client 07', time: '5 min ago' },
-                { text: 'Client 03 joined federated round', time: '8 min ago' },
-                { text: 'Model accuracy improved to 98.7%', time: '15 min ago' },
-                { text: 'System health check: All clients online', time: '20 min ago' },
-              ].map((a, i) => (
+              {events.length === 0 && (
+                <div className="dash-list-item"><span>{loading ? 'Loading…' : 'No live events — backend unreachable'}</span><span /></div>
+              )}
+              {events.map((a, i) => (
                 <div key={i} className="dash-list-item">
                   <span>{a.text}</span>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{a.time}</span>
                 </div>
               ))}
             </div>
+            <small style={{ color: 'var(--text-muted)' }}>Predictions are model outputs, not confirmed incidents. Confirm alerts before action.</small>
           </div>
         </div>
       </div>

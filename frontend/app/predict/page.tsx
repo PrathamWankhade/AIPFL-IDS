@@ -15,10 +15,10 @@ interface PredictionData {
   total: number
   distribution: Record<string, number>
   mean_confidence: number
+  dataset?: string
 }
 
-function PredictionRow({ item }: { item: PredictionItem }) {
-  const isAttack = item.prediction !== 'Benign'
+function PredictionRow({ item }: { item: PredictionItem }) {  const isAttack = item.prediction !== 'Benign'
   return (
     <div style={{ padding: 12, background: 'var(--bg)', border: 'var(--border-thick)', marginBottom: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -35,17 +35,52 @@ function PredictionRow({ item }: { item: PredictionItem }) {
   )
 }
 
+function PaginatedPredictions({ results, distribution }: { results: PredictionItem[]; distribution: Record<string, number> }) {
+  const [page, setPage] = useState(0)
+  const PAGE = 50
+  const pages = Math.max(1, Math.ceil(results.length / PAGE))
+  const slice = results.slice(page * PAGE, page * PAGE + PAGE)
+  const download = () => {
+    const rows = ['prediction,confidence', ...results.map((r) => `${r.prediction},${r.confidence}`)].join('\n')
+    const blob = new Blob([rows], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'predictions.csv'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+  return (
+    <div>
+      <h4 style={{ marginBottom: 10 }}>All Predictions ({results.length})</h4>
+      <small style={{ color: 'var(--text-muted)' }}>Class distribution: {Object.entries(distribution).map(([k, v]) => `${k}: ${v}`).join(', ')}</small>
+      <div style={{ margin: '10px 0' }}>{slice.map((item, i) => <PredictionRow key={i} item={item} />)}</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button type="button" className="btn" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>Prev</button>
+        <small>Page {page + 1} / {pages}</small>
+        <button type="button" className="btn" disabled={page + 1 >= pages} onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}>Next</button>
+        <button type="button" className="btn" onClick={download}>Download CSV</button>
+      </div>
+      <small style={{ color: 'var(--text-muted)' }}>Scores are uncalibrated model outputs; confirm before action.</small>
+    </div>
+  )
+}
+
 export default function Predict() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<PredictionData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [dataset, setDataset] = useState('CICIoT2023')
   const fileRef = useRef<HTMLInputElement>(null)
 
   const handleFile = (f: File) => {
     setFile(f)
     setData(null)
-    setError(null)
+    if (f.size > 50 * 1024 * 1024) {
+      setError(`File is ${(f.size / 1048576).toFixed(1)} MB; server limit is 50 MB.`)
+    } else {
+      setError(null)
+    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -59,7 +94,7 @@ export default function Predict() {
     setLoading(true)
     setError(null)
     try {
-      const res = await api.predictFile(file)
+      const res = await api.predictFile(file, dataset)
       setData(res)
     } catch (err: any) {
       setError(err.message || 'Prediction failed')
@@ -87,6 +122,13 @@ export default function Predict() {
               <p style={{ marginBottom: 20 }}>Upload a CSV or Parquet file with network traffic features.</p>
 
               <form onSubmit={handleSubmit}>
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Target Model</label>
+                  <select className="form-input" value={dataset} onChange={(e) => setDataset(e.target.value)} style={{ width: '100%', padding: '10px 12px', fontFamily: 'var(--font-mono)' }}>
+                    <option value="CICIoT2023">CICIoT2023 (10 classes, 39 features)</option>
+                    <option value="NF-ToN-IoT-V2">NF-ToN-IoT-V2 (10 classes, 41 features)</option>
+                  </select>
+                </div>
                 <div className="form-group">
                   <div
                     className="form-input"
@@ -114,7 +156,7 @@ export default function Predict() {
               </form>
 
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid var(--bg)' }}>
-                <small><i className="fa-solid fa-info-circle" /> No data is uploaded to any external server. Processing happens entirely on this server.</small>
+                <small><i className="fa-solid fa-info-circle" /> The selected file is sent to the configured AIPFL-IDS server for analysis and deleted after prediction. See deployment docs for retention, logging, and transport security.</small>
               </div>
             </div>
           </div>
@@ -172,12 +214,7 @@ export default function Predict() {
                 )}
 
                 {data.results.length > 1 && (
-                  <div>
-                    <h4 style={{ marginBottom: 10 }}>All Predictions ({data.total})</h4>
-                    {data.results.map((item, i) => (
-                      <PredictionRow key={i} item={item} />
-                    ))}
-                  </div>
+                  <PaginatedPredictions results={data.results} distribution={data.distribution} />
                 )}
               </>
             )}
