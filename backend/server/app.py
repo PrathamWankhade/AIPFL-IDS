@@ -26,6 +26,16 @@ CORS(app, origins=config.ALLOWED_ORIGINS, supports_credentials=False)
 ALLOWED_EXTENSIONS = {".csv", ".parquet"}
 
 
+def client_ip():
+    """Direct remote address by default; forwarded headers only when the
+    deployment sets AIPFL_TRUST_PROXY=1 behind a sanitizing proxy."""
+    if getattr(config, "TRUST_PROXY", False):
+        fwd = request.headers.get("X-Forwarded-For", "")
+        if fwd:
+            return fwd.split(",")[0].strip()
+    return request.remote_addr or "unknown"
+
+
 def is_api_key_ok(provided):
     """True when no key configured (open local dev) or the key matches."""
     expected = getattr(config, "API_KEY", None)
@@ -69,7 +79,7 @@ def _enforce_edge_controls():
         if not is_api_key_ok(request.headers.get("X-API-Key")):
             if getattr(config, "API_KEY", None):
                 return json_error("Invalid or missing API key.", 401)
-        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+        ip = client_ip()
         if not rate_limiter.allowed(f"infer:{ip}"):
             return json_error("Rate limit exceeded. Retry later.", 429)
     return None

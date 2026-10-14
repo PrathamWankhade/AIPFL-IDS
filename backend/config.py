@@ -81,6 +81,9 @@ ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
 # localhost — the reverse proxy remains the primary boundary).
 API_KEY = os.environ.get("AIPFL_API_KEY") or None
 RATE_LIMIT_PER_MIN = int(os.environ.get("AIPFL_RATE_LIMIT_PER_MIN", "0"))
+# Trust X-Forwarded-For only behind a proxy that overwrites it. Default off:
+# spoofable headers must never select the rate-limit bucket on direct exposure.
+TRUST_PROXY = os.environ.get("AIPFL_TRUST_PROXY", "0") == "1"
 
 for d in [MODELS_DIR, UPLOAD_DIR, DATA_DIR / "raw", DATA_DIR / "processed", RESULTS_DIR]:
     os.makedirs(d, exist_ok=True)

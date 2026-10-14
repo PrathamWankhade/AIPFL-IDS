@@ -48,3 +48,19 @@ def test_rate_limiter_blocks_over_quota():
     assert rl.allowed("ip", now=1001.0) is True
     assert rl.allowed("ip", now=1002.0) is False
     assert rl.allowed("ip", now=1063.0) is True  # window slid
+
+
+def test_client_ip_ignores_forwarded_by_default(monkeypatch):
+    monkeypatch.setattr(config, "TRUST_PROXY", False)
+    with appmod.app.test_request_context(
+            "/", headers={"X-Forwarded-For": "9.9.9.9"},
+            environ_base={"REMOTE_ADDR": "1.2.3.4"}):
+        assert appmod.client_ip() == "1.2.3.4"
+
+
+def test_client_ip_trusts_proxy_when_enabled(monkeypatch):
+    monkeypatch.setattr(config, "TRUST_PROXY", True)
+    with appmod.app.test_request_context(
+            "/", headers={"X-Forwarded-For": "9.9.9.9, 8.8.8.8"},
+            environ_base={"REMOTE_ADDR": "1.2.3.4"}):
+        assert appmod.client_ip() == "9.9.9.9"

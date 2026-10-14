@@ -19,6 +19,9 @@
   require `X-API-Key` on `/api/predict*` and `/api/jobs*`, and
   `AIPFL_RATE_LIMIT_PER_MIN` for a per-IP sliding-window limit. These are
   not a substitute for the proxy boundary.
+- The limiter keys on the direct remote address unless `AIPFL_TRUST_PROXY=1`
+  is set behind a proxy that overwrites `X-Forwarded-For`; spoofable
+  headers are otherwise ignored. Verify limits through the deployed proxy.
 - CORS: `AIPFL_ALLOWED_ORIGINS` (default localhost:3000,3001),
   credentials disabled. This is not authentication.
 
