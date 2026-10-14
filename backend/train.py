@@ -22,6 +22,23 @@ def load_dataset(dataset):
     return load_ciciot2023()
 
 
+# Raw per-class totals from the last load_* call (pass-1 census), recorded
+# in the training summary so balanced-sample metrics can be distinguished
+# from natural-prevalence performance. Not a substitute for a
+# prevalence-representative test set (see docs).
+LAST_RAW_TOTALS: dict = {}
+
+
+def dataset_fingerprint(df, label_col):
+    """Deterministic fingerprint of the SAMPLED frame (not a raw-data hash)."""
+    import hashlib
+    import json as _json
+    vc = df[label_col].astype(str).value_counts().sort_index()
+    payload = {"rows": int(len(df)), "columns": sorted(map(str, df.columns)),
+               "class_counts": {str(k): int(v) for k, v in vc.items()}}
+    return hashlib.sha256(_json.dumps(payload, sort_keys=True).encode()).hexdigest(), payload
+
+
 def load_nftoniotv2():
     dataset_path = config.DATA_DIR / "raw" / config.NFTONIOTV2_FILE
     if not os.path.exists(dataset_path):
@@ -48,6 +65,8 @@ def load_nftoniotv2():
         for k, v in vc.items():
             totals[k] = totals.get(k, 0) + int(v)
     print(f"Class totals (raw): {len(totals)} classes")
+    LAST_RAW_TOTALS.clear()
+    LAST_RAW_TOTALS.update({str(k): int(v) for k, v in totals.items()})
     fractions = {k: min(1.0, config.NFTONIOTV2_MAX_SAMPLES_PER_CLASS / max(1, v)) for k, v in totals.items()}
     # Pass 2: stratified sample with fixed seed (avoids first-rows bias).
     pf = pq.ParquetFile(dataset_path)
@@ -140,6 +159,8 @@ def load_ciciot2023():
     df = pd.concat(final_parts, ignore_index=True)
     df = df.sample(frac=1, random_state=config.RANDOM_STATE).reset_index(drop=True)
     print(f"\nTotal raw rows : {total_rows:,}")
+    LAST_RAW_TOTALS.clear()
+    LAST_RAW_TOTALS.update({str(k): int(v) for k, v in totals.items()})
     print(f"Balanced shape : {df.shape}")
     print(f"Classes        : {len(collected)}")
     for attack in sorted(collected.keys(), key=str):
@@ -191,6 +212,8 @@ def main():
     print(f"Shape       : {df.shape}")
     print(f"Columns     : {list(df.columns)[:10]}... ({len(df.columns)} total)")
     print(f"Memory      : {df.memory_usage(deep=True).sum() / 1e6:.1f} MB")
+    fingerprint, fp_payload = dataset_fingerprint(df, label_col)
+    print(f"Sample fingerprint: {fingerprint[:16]}… ({fp_payload['rows']:,} rows)")
 
     drop_cols = [label_col]
     if "Label" in df.columns and label_col != "Label":
@@ -326,6 +349,14 @@ def main():
                   "test_split": config.TEST_SPLIT, "val_split": config.VALIDATION_SPLIT,
                   "seed": config.SEED, "split_mode": args.split,
                   "group_col": args.group_col, "protocol": split_protocol},
+        "sampling": {"method": "two-pass stratified fraction + deterministic cap",
+                     "per_class_cap": config.CICIOT2023_MAX_SAMPLES_PER_CLASS
+                     if dataset == "CICIoT2023" else config.NFTONIOTV2_MAX_SAMPLES_PER_CLASS,
+                     "seed": config.RANDOM_STATE,
+                     "raw_class_totals": dict(LAST_RAW_TOTALS),
+                     "sampled_class_counts": fp_payload["class_counts"],
+                     "dataset_fingerprint": fingerprint,
+                     "note": "Balanced-sample metrics; retain a natural-prevalence test set for operational FPR/precision."},
         "config": {
             "global_rounds": config.GLOBAL_ROUNDS,
             "local_epochs": config.EPOCHS_PER_CLIENT,
