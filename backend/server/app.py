@@ -90,6 +90,97 @@ def resolve_service(dataset=None):
     return svc, None
 
 
+@app.route("/api/jobs", methods=["POST"])
+@log_request
+def api_jobs_create():
+    """Enqueue a large-file inference job. Returns 202 + job_id; poll status."""
+    import tempfile
+    from src import jobs as jobstore
+    dataset = request.args.get("dataset", "CICIoT2023")
+    svc, err = resolve_service(dataset)
+    if err:
+        return err
+    if "file" not in request.files:
+        return json_error("No file uploaded")
+    file = request.files["file"]
+    if file.filename == "":
+        return json_error("No file selected")
+    if not allowed_file(file.filename):
+        return json_error("Unsupported file type. Use CSV or Parquet.")
+    if request.content_length and request.content_length > app.config["MAX_CONTENT_LENGTH"]:
+        return json_error(f"File exceeds {config.MAX_FILE_SIZE_MB} MB limit", 413)
+    ext = os.path.splitext(file.filename)[1].lower()
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext, dir=str(config.UPLOAD_DIR))
+    filepath = tmp.name
+    tmp.close()
+    file.save(filepath)
+    try:
+        # Bound the shape before accepting the job (same caps as sync).
+        df_probe = load_file_data(filepath)
+        check_frame_bounds(df_probe)
+        del df_probe
+    except ValueError as e:
+        try:
+            os.remove(filepath)
+        except Exception:
+            pass
+        return json_error(str(e), 422)
+
+    job_id = jobstore.create_job(dataset, ext)
+    jdir = jobstore.jobs_dir(config.UPLOAD_DIR)
+
+    def _work():
+        try:
+            df = load_file_data(filepath)
+            check_frame_bounds(df)
+            result = svc.predict(df)
+            csv_path = str(jdir / f"{job_id}.csv")
+            import csv as _csv
+            with open(csv_path, "w", newline="") as f:
+                w = _csv.writer(f)
+                w.writerow(["prediction", "confidence"])
+                for r in result["results"]:
+                    w.writerow([r["prediction"], r["confidence"]])
+            with jobstore._LOCK:
+                if job_id in jobstore._JOBS:
+                    jobstore._JOBS[job_id]["result_csv"] = csv_path
+            return {"total": result["total"], "distribution": result["distribution"],
+                    "mean_confidence": result["mean_confidence"]}
+        finally:
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception:
+                pass
+
+    jobstore.run_in_background(_work, job_id)
+    return jsonify({"success": True, "data": {"job_id": job_id, "status": "queued"}}), 202
+
+
+@app.route("/api/jobs/<job_id>", methods=["GET"])
+@log_request
+def api_jobs_status(job_id):
+    from src import jobs as jobstore
+    job = jobstore.public_view(jobstore.get_job(job_id))
+    if not job:
+        return json_error("Unknown job_id", 404)
+    return json_response(job)
+
+
+@app.route("/api/jobs/<job_id>/download", methods=["GET"])
+@log_request
+def api_jobs_download(job_id):
+    from flask import send_file
+    from src import jobs as jobstore
+    job = jobstore.get_job(job_id)
+    if not job:
+        return json_error("Unknown job_id", 404)
+    if job.get("status") != "done" or not job.get("result_csv"):
+        return json_error(f"Job {job.get('status')}; download not ready", 409)
+    return send_file(job["result_csv"], mimetype="text/csv", as_attachment=True,
+                     download_name=f"predictions_{job_id}.csv")
+
+
 @app.route("/api/predict", methods=["POST"])
 @log_request
 def api_predict():
