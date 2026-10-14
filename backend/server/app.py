@@ -115,21 +115,17 @@ def api_jobs_create():
     tmp.close()
     file.save(filepath)
     try:
-        # Bound the shape before accepting the job (same caps as sync).
-        df_probe = load_file_data(filepath)
-        check_frame_bounds(df_probe)
-        del df_probe
-    except ValueError as e:
+        job_id = jobstore.create_job(dataset, ext, str(config.UPLOAD_DIR))
+    except RuntimeError as e:
         try:
             os.remove(filepath)
         except Exception:
             pass
-        return json_error(str(e), 422)
-
-    job_id = jobstore.create_job(dataset, ext)
-    jdir = jobstore.jobs_dir(config.UPLOAD_DIR)
+        return json_error(str(e), 429)
+    jdir = jobstore.jobs_dir(str(config.UPLOAD_DIR))
 
     def _work():
+        # Single parse: bounds enforced here, violations surface as job error.
         try:
             df = load_file_data(filepath)
             check_frame_bounds(df)
@@ -141,9 +137,7 @@ def api_jobs_create():
                 w.writerow(["prediction", "confidence"])
                 for r in result["results"]:
                     w.writerow([r["prediction"], r["confidence"]])
-            with jobstore._LOCK:
-                if job_id in jobstore._JOBS:
-                    jobstore._JOBS[job_id]["result_csv"] = csv_path
+            jobstore._set(job_id, str(config.UPLOAD_DIR), result_csv=csv_path)
             return {"total": result["total"], "distribution": result["distribution"],
                     "mean_confidence": result["mean_confidence"]}
         finally:
@@ -153,7 +147,7 @@ def api_jobs_create():
             except Exception:
                 pass
 
-    jobstore.run_in_background(_work, job_id)
+    jobstore.run_in_background(_work, job_id, str(config.UPLOAD_DIR))
     return jsonify({"success": True, "data": {"job_id": job_id, "status": "queued"}}), 202
 
 
