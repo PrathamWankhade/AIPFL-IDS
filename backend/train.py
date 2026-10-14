@@ -244,17 +244,29 @@ def main():
     print(f"\nTraining: {config.GLOBAL_ROUNDS} rounds, {config.EPOCHS_PER_CLIENT} epochs/client, {config.NUM_CLIENTS} clients, lr={config.LEARNING_RATE}")
     result = federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, verbose=True, best_model_path=best_path, final_model_path=model_path, client_fraction=client_fraction, seed=config.SEED)
 
-    # Final held-out evaluation runs ONCE on test (never used for selection).
-    eval_results = evaluate_model(result["model"], X_test, y_test, class_names, history=result["history"])
-
-    # ── Single release bundle: promote best-val checkpoint as deployed ──
-    import shutil, hashlib
+    # ── P0 fix: metrics must describe the DEPLOYED checkpoint ──
+    # 1. Persist preprocessing first so reload uses matching artifacts.
+    # 2. Promote best-val checkpoint to the serving path.
+    # 3. Reload that exact file from disk and evaluate ONCE on test.
+    import shutil
+    save_preprocessing_artifacts(scaler, label_encoder, scaler_path, encoder_path, feature_path, feature_columns, bundle=bundle)
     if result["best_accuracy"] > 0 and os.path.exists(best_path):
         shutil.copyfile(best_path, model_path)
         print(f"Promoted best-val checkpoint -> {model_path}")
     else:
         result["model"].save(model_path)
-    save_preprocessing_artifacts(scaler, label_encoder, scaler_path, encoder_path, feature_path, feature_columns, bundle=bundle)
+        print(f"No best checkpoint; saved final-round model -> {model_path}")
+
+    import tensorflow as tf
+    from src.preprocessing import load_preprocessing_artifacts
+    deployed_model = tf.keras.models.load_model(str(model_path))
+    _scaler, _encoder, _cols, _bundle = load_preprocessing_artifacts(dataset)
+    assert list(_cols) == list(feature_columns), "Feature schema changed between save and reload."
+    assert list(_encoder.classes_) == list(label_encoder.classes_), "Label map changed between save and reload."
+    assert deployed_model.input_shape[1] == input_dim, "Reloaded model input dim mismatch."
+    # Final held-out evaluation runs ONCE on test (never used for selection),
+    # on the exact artifact that will be served.
+    eval_results = evaluate_model(deployed_model, X_test, y_test, class_names, history=result["history"])
     print(f"\nModel: {model_path}")
     print(f"Scaler: {scaler_path}")
     print(f"Encoder: {encoder_path}")
