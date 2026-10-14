@@ -200,21 +200,14 @@ def api_jobs_create():
     jdir = jobstore.jobs_dir(str(config.UPLOAD_DIR))
 
     def _work():
-        # Single parse: bounds enforced here, violations surface as job error.
+        # Streaming: bounded memory, supports files larger than the sync
+        # limit (up to MAX_JOB_ROWS). Violations surface as job error.
+        from src.job_inference import run_job_file
         try:
-            df = load_file_data(filepath)
-            check_frame_bounds(df)
-            result = svc.predict(df)
             csv_path = str(jdir / f"{job_id}.csv")
-            import csv as _csv
-            with open(csv_path, "w", newline="") as f:
-                w = _csv.writer(f)
-                w.writerow(["prediction", "confidence"])
-                for r in result["results"]:
-                    w.writerow([r["prediction"], r["confidence"]])
+            summary = run_job_file(svc, filepath, ext, csv_path, config.MAX_JOB_ROWS)
             jobstore._set(job_id, str(config.UPLOAD_DIR), result_csv=csv_path)
-            return {"total": result["total"], "distribution": result["distribution"],
-                    "mean_confidence": result["mean_confidence"]}
+            return summary
         finally:
             try:
                 if os.path.exists(filepath):

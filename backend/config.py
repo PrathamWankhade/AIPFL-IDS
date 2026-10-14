@@ -74,6 +74,7 @@ ALLOWED_EXTENSIONS = {".csv", ".parquet"}
 MAX_UPLOAD_ROWS = int(os.environ.get("AIPFL_MAX_ROWS", "100000"))
 MAX_UPLOAD_COLUMNS = int(os.environ.get("AIPFL_MAX_COLS", "200"))
 MAX_BATCH_ROWS = int(os.environ.get("AIPFL_MAX_BATCH_ROWS", "5000"))
+MAX_JOB_ROWS = int(os.environ.get("AIPFL_MAX_JOB_ROWS", "1000000"))
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
     "AIPFL_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",") if o.strip()]
 # Optional app-level controls (off by default; REQUIRED when exposed beyond
