@@ -14,19 +14,17 @@ def create_model(input_dim, num_classes, strategy=None):
     with strategy.scope():
         model = Sequential(name="AIPFL_IDS_DNN")
 
-        model.add(Dense(config.DENSE_UNITS[0], activation="relu", kernel_regularizer=l2(config.L2_REG), input_shape=(input_dim,), name="dense_512"))
-        model.add(BatchNormalization(name="bn_512"))
-        model.add(Dropout(config.DROPOUT_RATES[0], name="dropout_512"))
+        units = config.DENSE_UNITS
+        drops = config.DROPOUT_RATES
 
-        model.add(Dense(config.DENSE_UNITS[1], activation="relu", kernel_regularizer=l2(config.L2_REG), name="dense_256"))
-        model.add(BatchNormalization(name="bn_256"))
-        model.add(Dropout(config.DROPOUT_RATES[1], name="dropout_256"))
-
-        model.add(Dense(config.DENSE_UNITS[2], activation="relu", kernel_regularizer=l2(config.L2_REG), name="dense_128"))
-        model.add(BatchNormalization(name="bn_128"))
-        model.add(Dropout(config.DROPOUT_RATES[2], name="dropout_128"))
-
-        model.add(Dense(config.DENSE_UNITS[3], activation="relu", kernel_regularizer=l2(config.L2_REG), name="dense_64"))
+        for i, u in enumerate(units):
+            if i == 0:
+                model.add(Dense(u, activation="relu", kernel_regularizer=l2(config.L2_REG), input_shape=(input_dim,), name=f"dense_{u}"))
+            else:
+                model.add(Dense(u, activation="relu", kernel_regularizer=l2(config.L2_REG), name=f"dense_{u}"))
+            model.add(BatchNormalization(name=f"bn_{u}"))
+            if i < len(drops):
+                model.add(Dropout(drops[i], name=f"dropout_{u}"))
 
         model.add(Dense(num_classes, activation="softmax", dtype="float32", name="output"))
 

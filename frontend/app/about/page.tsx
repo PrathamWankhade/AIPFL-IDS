@@ -12,9 +12,9 @@ export default function About() {
 
         <div className="about-stats">
           {[
-            { value: '13M', label: 'Dataset Records' },
-            { value: '79.85%', label: 'Test Accuracy' },
-            { value: '10', label: 'Attack Classes' },
+            { value: '58M', label: 'Total Records' },
+            { value: '79.92%', label: 'Best Accuracy' },
+            { value: '44', label: 'Total Classes' },
             { value: '10', label: 'Global Rounds' },
           ].map((s, i) => (
             <div key={i} className="about-stat reveal">
@@ -43,15 +43,15 @@ export default function About() {
         <div className="section-header reveal">
           <SectionTag>Architecture</SectionTag>
           <h2>How It Works</h2>
-          <p>A complete AI pipeline that transforms raw IoT traffic into intelligent cyber attack predictions.</p>
+          <p>A complete AI pipeline that transforms raw IoT traffic into intelligent cyber attack predictions using two datasets.</p>
         </div>
         <div className="timeline" style={{ marginBottom: 70 }}>
           {[
-            { num: '01', title: 'Data Collection & Balancing', desc: 'IoT network traffic is collected from distributed devices. The NF-ToN-IoT-V2 dataset contains over 13 million records with 43 features. Each attack category is sampled up to 50,000 records to create a balanced dataset.' },
-            { num: '02', title: 'Preprocessing & Feature Engineering', desc: 'Unstable features are removed, infinite values are handled via median imputation, constant features are eliminated using VarianceThreshold, and all features are standardized using StandardScaler.' },
-            { num: '03', title: 'Federated Training', desc: 'The dataset is split among 10 simulated clients. Each client trains a deep neural network locally for 3 epochs per global round. Only model weights — never data — are shared with the central server.' },
+            { num: '01', title: 'Data Collection & Balancing', desc: 'IoT network traffic from CICIoT2023 (45M records, 10 merged classes) and NF-ToN-IoT-V2 (13M records, 10 classes). Each attack category is sampled up to 50K records to create balanced 436K+377K subsets.' },
+            { num: '02', title: 'Preprocessing & Feature Engineering', desc: 'Infinite and extreme values are clipped via percentile-based bounds, constant features removed with VarianceThreshold, and features standardized with StandardScaler per dataset.' },
+            { num: '03', title: 'Federated Training', desc: 'Each dataset is split among 10 simulated clients. Each client trains a deep neural network locally for 3 epochs per global round. Only model weights — never data — are shared with the central server.' },
             { num: '04', title: 'Federated Averaging (FedAvg)', desc: 'The central server aggregates client updates using weighted Federated Averaging. Larger client datasets contribute proportionally more. Invalid updates are discarded for stability.' },
-            { num: '05', title: 'AI Prediction & Evaluation', desc: 'The global model achieves 79.85% test accuracy across 10 attack types including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
+            { num: '05', title: 'AI Prediction & Evaluation', desc: 'CICIoT2023 achieves 71.35% test accuracy across 10 classes. NF-ToN-IoT-V2 achieves 79.92% across 10 classes including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
           ].map((s, i) => (
             <div key={i} className="timeline-item reveal">
               <div className="timeline-number">{s.num}</div>
@@ -66,15 +66,15 @@ export default function About() {
         <div className="section-header reveal">
           <SectionTag>Model Architecture</SectionTag>
           <h2>Deep Neural Network Design</h2>
-          <p>The model is implemented as a fully connected neural network using TensorFlow Keras.</p>
+          <p>The model is implemented as a fully connected neural network using TensorFlow Keras, shared across both datasets.</p>
         </div>
         <div className="grid-2" style={{ marginBottom: 70 }}>
           <div className="card-feature reveal-left">
             <h3>Network Structure</h3>
             <ul className="check-list" style={{ marginTop: 14 }}>
-              <li><i className="fa-solid fa-check" /> Input: 39 features after preprocessing</li>
+              <li><i className="fa-solid fa-check" /> Input: 39 (CICIoT2023) / 41 (NF-ToN-V2) features</li>
               <li><i className="fa-solid fa-check" /> Hidden: 512 → 256 → 128 → 64 neurons</li>
-              <li><i className="fa-solid fa-check" /> Output: 10 classes (Softmax activation)</li>
+              <li><i className="fa-solid fa-check" /> Output: 34 / 10 classes (Softmax activation)</li>
               <li><i className="fa-solid fa-check" /> Batch Normalization after each hidden layer</li>
               <li><i className="fa-solid fa-check" /> Dropout (0.30, 0.30, 0.20) for regularization</li>
               <li><i className="fa-solid fa-check" /> L2 regularization on all dense layers</li>
@@ -96,14 +96,14 @@ export default function About() {
         <div className="section-header reveal">
           <SectionTag>Performance</SectionTag>
           <h2>Detection Capabilities</h2>
-          <p>The AIPFL-IDS model achieves industry-leading performance while maintaining privacy.</p>
+          <p>Two trained models achieving strong detection accuracy across 44 attack types while maintaining privacy.</p>
         </div>
         <div className="grid-4">
           {[
-            { value: '79.85', suffix: '%', label: 'Test Accuracy' },
-            { value: '377', suffix: 'K', label: 'Training Samples' },
-            { value: '39', suffix: '', label: 'Input Features' },
-            { value: '10', suffix: '', label: 'Fed Clients' },
+            { value: '79.92', suffix: '%', label: 'NF-ToN-V2 Accuracy' },
+            { value: '71.35', suffix: '%', label: 'CICIoT2023 Accuracy' },
+            { value: '537', suffix: 'K', label: 'Total Samples' },
+            { value: '44', suffix: '', label: 'Attack Classes' },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal">
               <h2 className="stat-number" data-count-to={s.value} data-count-suffix={s.suffix}>{s.value}{s.suffix}</h2>

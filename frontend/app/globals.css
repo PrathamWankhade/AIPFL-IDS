@@ -800,30 +800,36 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 
 .dashboard-graph {
   height: 70px;
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  padding: 12px;
+  padding: 8px 8px 0;
   background: var(--bg);
   border: var(--border-thick);
   margin-bottom: 16px;
+  overflow: hidden;
 }
 
-.dashboard-graph div {
-  flex: 1;
-  background: var(--blue);
-  animation: bar-rise 0.5s ease-out forwards, bar-pulse 2s ease-in-out infinite;
+.dashboard-graph svg {
+  display: block;
+}
+
+.dashboard-graph .graph-bar {
+  animation: graph-svg-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   transform-origin: bottom;
 }
 
-.dashboard-graph div:nth-child(1) { height: 35%; animation-delay: 0.05s, 2.5s; }
-.dashboard-graph div:nth-child(2) { height: 55%; animation-delay: 0.10s, 2.8s; }
-.dashboard-graph div:nth-child(3) { height: 80%; animation-delay: 0.15s, 2.2s; }
-.dashboard-graph div:nth-child(4) { height: 65%; animation-delay: 0.20s, 3.0s; }
-.dashboard-graph div:nth-child(5) { height: 95%; animation-delay: 0.25s, 2.0s; }
-.dashboard-graph div:nth-child(6) { height: 70%; animation-delay: 0.30s, 3.2s; }
-.dashboard-graph div:nth-child(7) { height: 50%; animation-delay: 0.35s, 2.6s; }
-.dashboard-graph div:nth-child(8) { height: 30%; animation-delay: 0.40s, 2.9s; }
+@keyframes graph-svg-rise {
+  from { transform: scaleY(0.02); }
+  to   { transform: scaleY(1); }
+}
+
+.chart-line {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: draw-line 1.5s ease-out 0.3s forwards;
+}
+
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
 
 .dashboard-footer {
   display: flex;
@@ -1212,16 +1218,6 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-@keyframes bar-rise {
-  from { height: 0; opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes bar-pulse {
-  0%, 100% { opacity: 1; transform: scaleY(1); }
-  50% { opacity: 0.7; transform: scaleY(1.05); }
 }
 
 /* ============================================
