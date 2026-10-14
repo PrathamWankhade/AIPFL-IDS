@@ -46,8 +46,37 @@ def test_missing_column_raises():
     raise AssertionError("missing required column should raise")
 
 
-def test_inf_imputed_with_train_median():
+def test_inf_rejected_as_corrupt():
     df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0]})
     _, bundle, scaler = pre.fit_preprocessor(df)
-    out = pre.transform_with_bundle(pd.DataFrame({"a": [float("inf")]}), bundle, scaler)
-    assert np.all(np.isfinite(out))
+    try:
+        pre.transform_with_bundle(pd.DataFrame({"a": [float("inf")]}), bundle, scaler)
+    except ValueError:
+        return
+    raise AssertionError("inf should be rejected, not silently imputed")
+
+
+def test_genuine_missing_imputed_single_row():
+    df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0]})
+    _, bundle, scaler = pre.fit_preprocessor(df)
+    out = pre.transform_with_bundle(pd.DataFrame({"a": [None]}), bundle, scaler)
+    assert np.all(np.isfinite(out)) and out.shape == (1, 1)
+
+
+def test_strings_in_numeric_column_rejected():
+    df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0]})
+    _, bundle, scaler = pre.fit_preprocessor(df)
+    try:
+        pre.transform_with_bundle(pd.DataFrame({"a": ["not-a-number"]}), bundle, scaler)
+    except ValueError as e:
+        assert "Non-numeric" in str(e)
+        return
+    raise AssertionError("text in numeric column should raise")
+
+
+def test_extra_columns_ignored():
+    df = pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0]})
+    _, bundle, scaler = pre.fit_preprocessor(df)
+    out = pre.transform_with_bundle(
+        pd.DataFrame({"a": [2.0], "attacker_controlled": ["x"]}), bundle, scaler)
+    assert out.shape == (1, 1)

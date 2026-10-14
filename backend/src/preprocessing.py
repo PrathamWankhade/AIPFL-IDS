@@ -115,7 +115,12 @@ def fit_preprocessor(df_features, threshold=1e15):
 
 
 def transform_with_bundle(df_features, bundle, scaler):
-    """Transform new data with a fitted bundle. Never fits; raises on bad schema."""
+    """Transform new data with a fitted bundle. Never fits; raises on bad schema.
+
+    Policy: extra columns ignored; missing required columns raise; genuine
+    missing (NaN/None/empty) imputed with TRAIN medians; non-numeric text
+    and infinities in a required numeric column raise an actionable error.
+    """
     if bundle is None or scaler is None:
         raise ValueError("Preprocessing bundle/scaler is missing.")
     feature_columns = bundle.get("feature_columns")
@@ -126,21 +131,33 @@ def transform_with_bundle(df_features, bundle, scaler):
 
     df = df_features.copy()
 
-    # Extra columns are ignored (documented policy); missing required
-    # numeric columns are zero-filled only if they were constant-imputed
-    # at train time — otherwise raise an actionable error.
+    # Extra columns are ignored (documented policy).
     missing = [c for c in feature_columns if c not in df.columns]
     if missing:
         raise ValueError(f"Missing required feature column(s): {missing[:10]}")
 
-    # Impute with TRAIN medians; reject non-finite-after-imputation.
+    bad_cols = {}
     for col in feature_columns:
-        if col in df.columns:
-            s = pd.to_numeric(df[col], errors="coerce")
-            s = s.replace([np.inf, -np.inf], np.nan)
-            if s.isna().any():
-                s = s.fillna(medians.get(col, 0.0))
-            df[col] = s
+        s_orig = df[col]
+        s = pd.to_numeric(s_orig, errors="coerce")
+        # Genuine missing: NaN/None or blank strings -> imputable.
+        orig_blank = s_orig.isna() | (s_orig.astype(str).str.strip() == "")
+        invalid_mask = s.isna() & ~orig_blank
+        if invalid_mask.any():
+            examples = s_orig[invalid_mask].astype(str).unique()[:3].tolist()
+            bad_cols[col] = examples
+            continue
+        if np.isinf(s.to_numpy(dtype=np.float64, na_value=np.nan)).any():
+            bad_cols[col] = ["inf"]
+            continue
+        if s.isna().any():
+            # Only genuine missing reach here; fill from TRAIN medians.
+            s = s.fillna(medians.get(col, 0.0))
+        df[col] = s
+    if bad_cols:
+        detail = "; ".join(f"{c}: {v}" for c, v in list(bad_cols.items())[:5])
+        raise ValueError(f"Non-numeric value(s) in numeric feature(s): {detail}. "
+                         "Fix the schema or remove corrupt columns.")
     # Clip with TRAIN bounds.
     for col, bounds in clip_bounds.items():
         if col in df.columns:
