@@ -154,6 +154,10 @@ def main():
     ap.add_argument("--partition", choices=["iid", "label_skew", "quantity_skew"], default=None)
     ap.add_argument("--alpha", type=float, default=None, help="Dirichlet alpha for non-IID partitions")
     ap.add_argument("--client-fraction", type=float, default=None, help="Fraction of clients sampled per round")
+    ap.add_argument("--split", choices=["stratified", "group"], default="stratified",
+                    help="stratified: random rows; group: hold out whole groups (capture/device/time)")
+    ap.add_argument("--group-col", default=None,
+                    help="Column holding capture/device/session id for --split group")
     args = ap.parse_args()
     dataset = args.dataset
     if args.seed is not None:
@@ -191,25 +195,47 @@ def main():
     drop_cols = [label_col]
     if "Label" in df.columns and label_col != "Label":
         drop_cols.append("Label")
+    if args.group_col and args.group_col in df.columns:
+        # Identifiers must never become model features.
+        drop_cols.append(args.group_col)
     X_raw = df.drop(columns=drop_cols, errors="ignore")
     y_raw = df[label_col].astype(str)
 
     # ── Split FIRST on raw records (no preprocessing fitted yet) ──
-    try:
-        X_tr_df, X_te_df, y_tr, y_te = train_test_split(
-            X_raw, y_raw, test_size=config.TEST_SPLIT,
-            stratify=y_raw, random_state=config.SEED)
+    split_protocol = "stratified-raw-first; preprocess-fit-train-only; val-selects-checkpoint; test-once"
+    if args.split == "group":
+        from sklearn.model_selection import GroupShuffleSplit
+        if not args.group_col or args.group_col not in df.columns:
+            raise ValueError("--split group requires --group-col naming a capture/device/session column present in the data.")
+        groups = df[args.group_col].astype(str).to_numpy()
+        gss_test = GroupShuffleSplit(n_splits=1, test_size=config.TEST_SPLIT, random_state=config.SEED)
+        tr_val_idx, te_idx = next(gss_test.split(X_raw, y_raw, groups))
         val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
-        X_tr_df, X_va_df, y_tr, y_va = train_test_split(
-            X_tr_df, y_tr, test_size=val_frac,
-            stratify=y_tr, random_state=config.SEED)
-    except ValueError:
-        # Fallback for degenerate tiny/rare-class samples.
-        X_tr_df, X_te_df, y_tr, y_te = train_test_split(
-            X_raw, y_raw, test_size=config.TEST_SPLIT, random_state=config.SEED)
-        val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
-        X_tr_df, X_va_df, y_tr, y_va = train_test_split(
-            X_tr_df, y_tr, test_size=val_frac, random_state=config.SEED)
+        gss_val = GroupShuffleSplit(n_splits=1, test_size=val_frac, random_state=config.SEED)
+        tr_idx_rel, va_idx_rel = next(gss_val.split(
+            X_raw.iloc[tr_val_idx], y_raw.iloc[tr_val_idx], groups[tr_val_idx]))
+        tr_idx = tr_val_idx[tr_idx_rel]
+        va_idx = tr_val_idx[va_idx_rel]
+        X_tr_df, X_va_df, X_te_df = X_raw.iloc[tr_idx], X_raw.iloc[va_idx], X_raw.iloc[te_idx]
+        y_tr, y_va, y_te = y_raw.iloc[tr_idx], y_raw.iloc[va_idx], y_raw.iloc[te_idx]
+        split_protocol = (f"group-holdout on {args.group_col}; no group spans splits; "
+                          "preprocess-fit-train-only; val-selects-checkpoint; test-once")
+    else:
+        try:
+            X_tr_df, X_te_df, y_tr, y_te = train_test_split(
+                X_raw, y_raw, test_size=config.TEST_SPLIT,
+                stratify=y_raw, random_state=config.SEED)
+            val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
+            X_tr_df, X_va_df, y_tr, y_va = train_test_split(
+                X_tr_df, y_tr, test_size=val_frac,
+                stratify=y_tr, random_state=config.SEED)
+        except ValueError:
+            # Fallback for degenerate tiny/rare-class samples.
+            X_tr_df, X_te_df, y_tr, y_te = train_test_split(
+                X_raw, y_raw, test_size=config.TEST_SPLIT, random_state=config.SEED)
+            val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
+            X_tr_df, X_va_df, y_tr, y_va = train_test_split(
+                X_tr_df, y_tr, test_size=val_frac, random_state=config.SEED)
     print(f"Split (raw-first): train={len(X_tr_df):,}  val={len(X_va_df):,}  test={len(X_te_df):,}")
 
     # ── Fit encoder + preprocessor on TRAIN only ──
@@ -298,7 +324,8 @@ def main():
         "feature_columns": list(feature_columns),
         "split": {"train": len(X_train), "val": len(X_val), "test": len(X_test),
                   "test_split": config.TEST_SPLIT, "val_split": config.VALIDATION_SPLIT,
-                  "seed": config.SEED, "protocol": "stratified-raw-first; preprocess-fit-train-only; val-selects-checkpoint; test-once"},
+                  "seed": config.SEED, "split_mode": args.split,
+                  "group_col": args.group_col, "protocol": split_protocol},
         "config": {
             "global_rounds": config.GLOBAL_ROUNDS,
             "local_epochs": config.EPOCHS_PER_CLIENT,
