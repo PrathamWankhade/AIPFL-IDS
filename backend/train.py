@@ -117,6 +117,14 @@ def merge_ciciot_classes(label):
 def load_ciciot2023():
     pattern = os.path.join(config.DATA_DIR, config.CICIOT2023_PATTERN)
     files = sorted(glob.glob(pattern))
+    if not files:
+        raise FileNotFoundError(
+            f"No CICIoT2023 CSVs matched {pattern!r}. The raw dataset is not "
+            "bundled with this repository: fetch 'dhoogla/ciciot2023' (Kaggle) or "
+            "the original UNB release, then lay the CSVs out under "
+            "backend/data/raw/CICIoT2023 */. NF-ToN-IoT-V2 does not need this "
+            "step — it downloads itself on first run."
+        )
     print(f"Loading CICIoT2023 from {len(files)} CSV files...")
     # Pass 1: count per merged class (label column only) for unbiased fractions.
     totals = {}

@@ -21,10 +21,13 @@ in-process array splits, not independent organisations/devices.
 - Authenticated client identity, TLS for FL transport, secure aggregation
   (SecAgg/SecAgg+), differential privacy with clipping/noise/accounting,
   robust aggregation (trimmed mean/median/Krum), Byzantine tolerance.
-- The Flask API has no app-level auth/rate-limit; run behind a reverse proxy
-  with TLS, auth, quotas, and audit logging (see `docs/DEPLOYMENT.md`).
+- The Flask API exposes optional app-level controls (`AIPFL_API_KEY`,
+  `AIPFL_RATE_LIMIT_PER_MIN`, origin allow-list) that default to **off** — they
+  are shared-secret/guest-grade, not user identity or authorization. Run behind
+  a reverse proxy with TLS, real authn/z, quotas, and audit logging
+  (see `docs/DEPLOYMENT.md`).
 - Dashboard predictions are uncalibrated model outputs (ECE reported in
-  `test_metrics.json`), not confirmed incidents.
+  `backend/results/training_summary_<dataset>.json`), not confirmed incidents.
 
 ## Verifying the current controls
 

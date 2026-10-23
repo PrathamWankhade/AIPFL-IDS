@@ -40,6 +40,9 @@ backend/data/processed/
 backend/results/*.png
 backend/results/*.json
 
+# Build info
+*.tsbuildinfo
+
 # Jupyter
 .ipynb_checkpoints/
 

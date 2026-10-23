@@ -38,7 +38,7 @@ AIPFL-IDS/
 │   ├── app/                 # App Router pages
 │   │   ├── layout.tsx       # Root layout (Navbar, Footer, Theme)
 │   │   ├── page.tsx         # Home page with dual-dataset metrics
-│   │   ├── globals.css      # All styles (Brutalist UI, animations)
+│   │   ├── globals.css      # Design tokens, theme, animations
 │   │   ├── about/           # About page
 │   │   ├── dashboard/       # Live metrics dashboard (dual-dataset)
 │   │   ├── predict/         # File upload with dataset selector
@@ -51,7 +51,7 @@ AIPFL-IDS/
 │
 ├── backend/                 # Python Flask + ML
 │   ├── server/
-│   │   ├── app.py           # Flask API (dual-model, 6 endpoints)
+│   │   ├── app.py           # Flask API (dual-model, 12 routes)
 │   │   └── requirements.txt
 │   ├── src/                 # ML core
 │   │   ├── model.py         # DNN architecture
@@ -92,10 +92,13 @@ npm run dev          # -> http://localhost:3000
 ```bash
 cd backend
 pip install -r requirements.txt
-python train.py --dataset CICIoT2023  # Train CICIoT2023 model (10 categories)
-python train.py --dataset NF-ToN-IoT-V2  # Train NF-ToN-IoT-V2 model (10 classes)
+python train.py --dataset CICIoT2023    # needs raw CSVs (see Datasets below)
+python train.py --dataset NF-ToN-IoT-V2 # auto-downloads on first run
 python server/app.py # -> http://localhost:5000
 ```
+> No model is shipped in the repo. Without a training run the server still
+> boots, but `/api/status` reports `model_loaded: false` and `/api/metrics`
+> returns `null`.
 
 ### Run (two terminals)
 **Terminal 1:** `cd frontend && npm run dev`
@@ -130,7 +133,16 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 | `LEARNING_RATE` | 0.001 | Adam learning rate |
 | `DENSE_UNITS` | [512,256,128] | Hidden layers |
 
-### CICIoT2023 Results (historical benchmark — reproduce with the released model before citing)
+### CICIoT2023 Results (historical — do not cite without re-running)
+
+> **Provenance warning.** These numbers were produced on 2026‑07‑01 by an
+> earlier pipeline revision, *before* the split-before-preprocess and
+> val-only-checkpoint fixes. In `training_summary_CICIoT2023.json` the
+> `best_accuracy` (validation) and `test_accuracy` values are **bit-identical**
+> (`0.7135392427444458`), which is only possible when the checkpoint is
+> selected on the set it is reported on. Treat them as optimistic and re-run
+> `train.py` with the current code before citing anything.
+
 
 | Metric | Value |
 |--------|-------|
@@ -140,7 +152,12 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 | Training Samples | 436,321 (balanced, 50K max/class) |
 | Raw Records | 45,019,243 |
 
-### NF-ToN-IoT-V2 Results (historical benchmark — reproduce with the released model before citing)
+### NF-ToN-IoT-V2 Results (historical — do not cite without re-running)
+
+> Same provenance issue: `best_accuracy` and `test_accuracy` are both
+> `0.799199640750885` in `training_summary_NF-ToN-IoT-V2.json`. The summary
+> also predates macro-F1, ECE, per-class and partition reporting.
+
 
 | Metric | Value |
 |--------|-------|
@@ -157,9 +174,9 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 - **Dual-Dataset Architecture**: CICIoT2023 (34 original labels mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes), with separate scalers, encoders, and models
 - **Robust Preprocessing**: `clip_extreme()` handles extreme byte-rate features (up to 1e+261) using percentile-based clipping
 - **Streaming Batch Loading**: 200K-row batches for memory-efficient processing of 45M+ records
-- **Federated Averaging (FedAvg)**: 10 clients, 10 rounds, weighted aggregation
+- **Federated Averaging (FedAvg)**: 10 simulated clients, weighted aggregation, configurable rounds/epochs, IID or Dirichlet non-IID partitions
 - **Dual-Model API**: Select dataset via `?dataset=CICIoT2023` or `?dataset=NF-ToN-IoT-V2` query parameter
-- **Brutalist UI**: Zero-radius, thick borders, hard shadows, monospace fonts, high contrast
+- **Bold UI**: high-contrast yellow/blue identity, subtle borders, consistent 8–12px radii, keyboard focus states, reduced-motion support
 
 ---
 
@@ -194,14 +211,28 @@ See `docs/DEPLOYMENT.md` and `docs/THREAT_MODEL.md`.
 
 ## Datasets
 
-- **CICIoT2023**: ~45M records, 39 features, 34 attack classes. Downloaded via KaggleHub from `dhoogla/ciciot2023`.
-- **NF-ToN-IoT-V2**: ~13M records, 43 features (41 after preprocessing), 10 attack classes. Pre-cached at `backend/data/raw/NF-ToN-IoT-V2.parquet`.
+Raw data is **not** committed (`backend/data/raw/` is gitignored — the
+datasets keep their own research-use terms). Each dataset page carries its
+own citation and license; read it before redistributing anything.
+
+- **CICIoT2023**: ~45M records, 34 attack labels merged to 10 categories, 39
+  model features after preprocessing. **Not auto-downloaded** — fetch
+  `dhoogla/ciciot2023` from [Kaggle](https://www.kaggle.com/datasets/dhoogla/ciciot2023)
+  (or the original UNB release) and lay the CSVs out so they match
+  `backend/data/raw/CICIoT2023 */*.csv` (63 files across one or more
+  `CICIoT2023 *` folders). `train.py` aborts with an actionable error when no
+  files match.
+- **NF-ToN-IoT-V2**: ~13M records, 10 classes, 41 model features after
+  preprocessing. **Auto-downloaded** from KaggleHub (`dhoogla/nftoniotv2`) on
+  first run and cached at `backend/data/raw/NF-ToN-IoT-V2.parquet`.
 
 ---
 
 ## Model Artifacts
 
-After training, the following files are saved to `backend/models/`:
+Training writes the following files to `backend/models/` (all **gitignored** —
+a fresh clone has no trained model until you run `train.py`, so `/predict`
+and the dashboard metrics stay inactive until then):
 
 | File | Purpose |
 |------|---------|

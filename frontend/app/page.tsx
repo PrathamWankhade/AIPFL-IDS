@@ -47,9 +47,9 @@ export default function Home() {
                 </a>
               </div>
               <div className="hero-trust reveal">
-                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Simulated Federation</span>
-                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Federated Learning</span>
-                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Deep Learning</span>
+                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Simulated FedAvg</span>
+                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> TensorFlow DNN</span>
+                <span className="hero-trust-item"><i className="fa-solid fa-circle-check" /> Dual-Dataset</span>
               </div>
             </div>
             <div className="hero-visual reveal">
@@ -70,7 +70,7 @@ export default function Home() {
                 <div className="metric-grid">
                   <div className="metric-card"><small>Attack Classes</small><h3>10+10</h3></div>
                   <div className="metric-card"><small>Features</small><h3>39+41</h3></div>
-                  <div className="metric-card"><small>Training Samples</small><h3>537K</h3></div>
+                  <div className="metric-card"><small>Sampled Rows</small><h3>814K</h3></div>
                   <div className="metric-card"><small>Fed Clients</small><h3>10</h3></div>
                 </div>
                 <div className="dashboard-graph">
@@ -107,7 +107,7 @@ export default function Home() {
               { num: '01', icon: 'fa-solid fa-database', title: 'Streaming Load', desc: '45M + 13M records from CICIoT2023 and NF-ToN-IoT-V2' },
               { num: '02', icon: 'fa-solid fa-scale-balanced', title: 'Per-Class Balance', desc: '50K max/class, 10+10 classes, 814K total balanced' },
               { num: '03', icon: 'fa-solid fa-sliders', title: 'Standard Scaling', desc: '39 + 41 features normalized per dataset' },
-              { num: '04', icon: 'fa-solid fa-network-wired', title: 'FedAvg Training', desc: '10 clients, 10 rounds, 3 epochs each' },
+              { num: '04', icon: 'fa-solid fa-network-wired', title: 'FedAvg Training', desc: '10 simulated clients, weighted aggregation, configurable rounds' },
               { num: '05', icon: 'fa-solid fa-chart-bar', title: 'Evaluation', desc: 'Historical 71.35% / 79.92% accuracy, confusion matrices' },
               { num: '06', icon: 'fa-solid fa-shield-halved', title: 'Inference', desc: 'Dual-model API with dataset selection' },
             ].map((s, i) => (
@@ -159,7 +159,7 @@ export default function Home() {
             {[
               { num: '01', title: 'Collect & Load', desc: 'CICIoT2023 (45M rows, 10 cls) + NF-ToN-IoT-V2 (13M rows, 10 cls) loaded in streaming batches.' },
               { num: '02', title: 'Preprocess & Balance', desc: '39 / 41 features standardized, class-balanced at 5K / 50K max per class.' },
-              { num: '03', title: 'Federated Training', desc: '10 simulated clients train locally (3 epochs each) in one process — simulation, not distributed devices.' },
+              { num: '03', title: 'Federated Training', desc: '10 simulated clients train locally for several epochs per round in one process — simulation, not distributed devices.' },
               { num: '04', title: 'Global Aggregation', desc: 'FedAvg merges local weight updates into a global DNN model.' },
               { num: '05', title: 'Evaluate & Deploy', desc: 'Historical 71.35% / 79.92% accuracy. Confusion matrices, precision, recall computed.' },
               { num: '06', title: 'Real-Time Inference', desc: 'Flask API serves predictions with dataset selectable via query param.' },
@@ -186,7 +186,7 @@ export default function Home() {
               <ul className="check-list">
                 <li><i className="fa-solid fa-check" /> Sample Traffic Analysis</li>
                 <li><i className="fa-solid fa-check" /> Attack Classification</li>
-                <li><i className="fa-solid fa-check" /> Federated Learning Progress</li>
+                <li><i className="fa-solid fa-check" /> Stored Evaluation Metrics</li>
                 <li><i className="fa-solid fa-check" /> AI Performance Metrics</li>
               </ul>
             </div>
@@ -270,7 +270,7 @@ export default function Home() {
             <SectionTag>Get Started</SectionTag>
             <h2 style={{ color: 'white', marginBottom: 12 }}>Ready to Protect Your IoT Network?</h2>
             <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1rem', maxWidth: 500, margin: '0 auto 28px' }}>
-              Experience privacy-preserving intrusion detection powered by AI and Federated Learning.
+              Explore an AI intrusion-detection research prototype built with simulated Federated Learning.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/predict" className="btn btn-yellow btn-lg">
