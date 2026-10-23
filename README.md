@@ -57,15 +57,17 @@ AIPFL-IDS/
 │   │   ├── model.py         # DNN architecture
 │   │   ├── preprocessing.py # Feature engineering (clip_extreme, clean_infinite)
 │   │   ├── federated.py     # FedAvg
+│   │   ├── splits.py        # Raw-first train/val/test split (shared with baselines)
 │   │   ├── evaluation.py    # Metrics, confusion matrix
 │   │   ├── predict.py       # Dual-model prediction service
 │   │   └── utils.py         # GPU, seeds, precision
-│   ├── data/raw/            # CICIoT2023 CSV (63 files) + NF-ToN-IoT-V2.parquet
-│   ├── models/              # Both trained models + scalers + encoders
+│   ├── data/raw/            # Datasets (gitignored; see Datasets below)
+│   ├── models/              # Both trained models + scalers + encoders (gitignored)
 │   ├── uploads/             # Temporary prediction uploads
-│   ├── results/             # Evaluation plots, training summary
+│   ├── results/             # Evaluation plots, training/baseline summaries (gitignored)
 │   ├── config.py            # Hyperparameters, dual-dataset paths
-│   └── train.py             # Training pipeline (--dataset flag)
+│   ├── train.py             # Training pipeline (--dataset flag)
+│   └── baselines.py         # Centralized baseline (rf|logreg) on the same split
 │
 ├── .gitignore
 ├── LICENSE
@@ -201,6 +203,22 @@ All endpoints at `/api/*` (proxied to Flask). Response format: `{success: bool, 
 
 Training flags: `--seed`, `--partition iid|label_skew|quantity_skew`, `--alpha`, `--client-fraction`,
 `--split stratified|group`, `--group-col`.
+
+### Baselines (how much does federation cost?)
+
+```bash
+cd backend
+python baselines.py --dataset NF-ToN-IoT-V2 --model rf      # RandomForest
+python baselines.py --dataset NF-ToN-IoT-V2 --model logreg  # Logistic regression
+```
+
+`baselines.py` trains a centralized model on the **identical raw-first split
+and train-only preprocessing bundle** as `train.py`, then writes
+`results/baseline_<model>_<dataset>.json` with the same metric set
+(accuracy, macro-F1, balanced accuracy, per-class F1, ECE, benign FPR).
+Comparing it against `training_summary_<dataset>.json` quantifies what
+simulated FedAvg costs — the number to quote in a write-up.
+
 Env: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`, `AIPFL_MAX_BATCH_ROWS`,
 `AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`, `AIPFL_ALLOWED_ORIGINS`, `AIPFL_API_KEY`,
 `AIPFL_RATE_LIMIT_PER_MIN`, `AIPFL_TRUST_PROXY`, `AIPFL_REQUIRE_MANIFEST`, `AIPFL_SEED`,

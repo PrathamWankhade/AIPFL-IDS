@@ -6,10 +6,10 @@ import argparse
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 import config
 from src.utils import setup_environment
+from src.splits import stratified_splits
 from src.preprocessing import encode_labels, save_preprocessing_artifacts
 from src.model import create_model
 from src.federated import create_clients, federated_training_loop
@@ -252,21 +252,7 @@ def main():
         split_protocol = (f"group-holdout on {args.group_col}; no group spans splits; "
                           "preprocess-fit-train-only; val-selects-checkpoint; test-once")
     else:
-        try:
-            X_tr_df, X_te_df, y_tr, y_te = train_test_split(
-                X_raw, y_raw, test_size=config.TEST_SPLIT,
-                stratify=y_raw, random_state=config.SEED)
-            val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
-            X_tr_df, X_va_df, y_tr, y_va = train_test_split(
-                X_tr_df, y_tr, test_size=val_frac,
-                stratify=y_tr, random_state=config.SEED)
-        except ValueError:
-            # Fallback for degenerate tiny/rare-class samples.
-            X_tr_df, X_te_df, y_tr, y_te = train_test_split(
-                X_raw, y_raw, test_size=config.TEST_SPLIT, random_state=config.SEED)
-            val_frac = config.VALIDATION_SPLIT / (1.0 - config.TEST_SPLIT)
-            X_tr_df, X_va_df, y_tr, y_va = train_test_split(
-                X_tr_df, y_tr, test_size=val_frac, random_state=config.SEED)
+        X_tr_df, X_va_df, X_te_df, y_tr, y_va, y_te = stratified_splits(X_raw, y_raw)
     print(f"Split (raw-first): train={len(X_tr_df):,}  val={len(X_va_df):,}  test={len(X_te_df):,}")
 
     # ── Fit encoder + preprocessor on TRAIN only ──

@@ -35,6 +35,7 @@ Thumbs.db
 # Data
 backend/data/raw/
 backend/data/processed/
+backend/data/kaggle-cache/
 
 # Results
 backend/results/*.png
