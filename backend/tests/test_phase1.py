@@ -71,3 +71,33 @@ def test_evaluation_metrics(tmp_path):
     ece_bad = ev.expected_calibration_error(
         np.ones(n, dtype=int), np.tile([0.99, 0.005, 0.005], (n, 1)))
     assert ece_bad > 0.9  # overconfident wrong predictions -> high ECE
+
+
+def test_evaluate_model_prefix_scopes_artifacts_per_dataset(tmp_path):
+    """Two datasets' plots/metrics must not overwrite each other (P1)."""
+    import numpy as np
+    ev = _load("evaluation")
+    n, k = 60, 3
+    rng = np.random.default_rng(2)
+    y = rng.integers(0, k, size=n)
+    probs = np.full((n, k), 0.2)
+    probs[np.arange(n), y] = 0.6
+    probs /= probs.sum(axis=1, keepdims=True)
+
+    class Stub:
+        def evaluate(self, X, yt, batch_size=None, verbose=0):
+            return 0.5, 0.8
+
+        def predict(self, X, batch_size=None, verbose=0):
+            return probs
+
+    for ds in ["CICIoT2023", "NF-ToN-IoT-V2"]:
+        ev.evaluate_model(Stub(), np.zeros((n, 4)), y, ["a", "b", "c"],
+                          history=None, save_dir=tmp_path, prefix=ds)
+    # Each dataset kept its own confusion matrix + metrics file.
+    assert (tmp_path / "CICIoT2023_confusion_matrix.png").exists()
+    assert (tmp_path / "NF-ToN-IoT-V2_confusion_matrix.png").exists()
+    assert (tmp_path / "CICIoT2023_test_metrics.json").exists()
+    assert (tmp_path / "NF-ToN-IoT-V2_test_metrics.json").exists()
+    # Un-prefixed names are not produced when a prefix is given.
+    assert not (tmp_path / "confusion_matrix.png").exists()

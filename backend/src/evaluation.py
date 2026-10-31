@@ -41,12 +41,19 @@ def benign_false_positive_rate(y_true, y_pred, class_names):
     return float(fp / (fp + tn))
 
 
-def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=None):
+def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=None,
+                   prefix=""):
+    """Evaluate + persist plots/metrics.
+
+    `prefix` scopes the output filenames (e.g. the dataset name) so training a
+    second dataset does not overwrite the first dataset's plots/metrics.
+    """
     from pathlib import Path as _Path
     if save_dir is None:
         save_dir = config.RESULTS_DIR
     save_dir = _Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
+    prefix = f"{prefix}_" if prefix else ""
 
     test_loss, test_accuracy = model.evaluate(X_test, y_test, batch_size=config.BATCH_SIZE, verbose=1)
     print(f"Test Accuracy: {test_accuracy:.4f} | Test Loss: {test_loss:.4f}")
@@ -79,11 +86,11 @@ def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=No
     disp.plot(ax=ax, cmap="Blues", values_format="d", xticks_rotation=45)
     ax.set_title("Confusion Matrix — AIPFL-IDS")
     plt.tight_layout()
-    plt.savefig(str(save_dir / "confusion_matrix.png"), dpi=150)
+    plt.savefig(str(save_dir / f"{prefix}confusion_matrix.png"), dpi=150)
     plt.close()
 
     if history is not None:
-        plot_training_history(history, save_dir)
+        plot_training_history(history, save_dir, prefix=prefix)
 
     metrics = {"test_accuracy": float(test_accuracy), "test_loss": float(test_loss),
                "classification_report": report, "macro_f1": macro_f1,
@@ -93,16 +100,17 @@ def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=No
     # Persist machine-readable metrics for dashboard/CI (no invented values).
     try:
         import json
-        with open(str(save_dir / "test_metrics.json"), "w") as f:
+        with open(str(save_dir / f"{prefix}test_metrics.json"), "w") as f:
             json.dump({k: v for k, v in metrics.items() if k != "classification_report"}, f, indent=2)
     except Exception:
         pass
     return metrics
 
 
-def plot_training_history(history, save_dir=None):
+def plot_training_history(history, save_dir=None, prefix=""):
     if save_dir is None:
         save_dir = config.RESULTS_DIR
+    prefix = f"{prefix}_" if prefix else ""
 
     epochs = range(1, len(history["global_accuracy"]) + 1)
 
@@ -115,7 +123,7 @@ def plot_training_history(history, save_dir=None):
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(str(save_dir / "accuracy_plot.png"), dpi=150)
+    plt.savefig(str(save_dir / f"{prefix}accuracy_plot.png"), dpi=150)
     plt.close()
 
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -127,5 +135,5 @@ def plot_training_history(history, save_dir=None):
     ax.legend()
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(str(save_dir / "loss_plot.png"), dpi=150)
+    plt.savefig(str(save_dir / f"{prefix}loss_plot.png"), dpi=150)
     plt.close()

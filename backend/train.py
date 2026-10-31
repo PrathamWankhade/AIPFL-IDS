@@ -363,7 +363,8 @@ def main():
     assert deployed_model.input_shape[1] == input_dim, "Reloaded model input dim mismatch."
     # Final held-out evaluation runs ONCE on test (never used for selection),
     # on the exact artifact that will be served.
-    eval_results = evaluate_model(deployed_model, X_test, y_test, class_names, history=result["history"])
+    eval_results = evaluate_model(deployed_model, X_test, y_test, class_names,
+                                  history=result["history"], prefix=dataset)
     print(f"\nModel: {model_path}")
     print(f"Scaler: {scaler_path}")
     print(f"Encoder: {encoder_path}")
