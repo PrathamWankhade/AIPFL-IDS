@@ -9,7 +9,7 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 RESULTS_DIR = BASE_DIR / "results"
 
 # ── CICIoT2023 ─────────────────────────────────────────────────────
-CICIOT2023_PATTERN = "raw/CICIoT2023 */*.csv"
+CICIOT2023_PATTERN = "raw/CICIoT2023*/*.csv"
 CICIOT2023_LABEL_COL = "Label"
 CICIOT2023_MAX_SAMPLES_PER_CLASS = 50000
 CICIOT2023_TOTAL_RECORDS = 45019243

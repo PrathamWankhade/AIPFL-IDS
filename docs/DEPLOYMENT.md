@@ -41,6 +41,11 @@
 - Release artifacts (`backend/models/`, `backend/results/release_*.json`)
   are trusted, versioned, integrity-checked (sha256 in manifest). Never load
   joblib/pickle artifacts from untrusted sources.
+- Those artifacts are **gitignored**: `train.py` writes
+  `results/release_<dataset>.json` (model + scaler + encoder + schema hashes)
+  on every run, and a fresh clone ships none of them. Produce or copy the
+  full artifact set (model, scaler, encoder, features, summary, manifest)
+  before tightening verification.
 - Set `AIPFL_REQUIRE_MANIFEST=1` in production: model loading then refuses
   a missing manifest, an incomplete hash set, a dataset mismatch, or any
   tampered artifact. A colocated manifest detects mismatch, not forgery —
@@ -48,7 +53,9 @@
 
 ## Environment
 
-- `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`,
-  `AIPFL_MAX_BATCH_ROWS`, `AIPFL_ALLOWED_ORIGINS`, `AIPFL_SEED`,
-  `AIPFL_PARTITION`, `AIPFL_ALPHA`, `AIPFL_CLIENT_FRACTION`,
-  `AIPFL_MIN_CLIENTS`.
+- Limits/uploads: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`,
+  `AIPFL_MAX_BATCH_ROWS`, `AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`.
+- Edge controls (all default off): `AIPFL_API_KEY`, `AIPFL_RATE_LIMIT_PER_MIN`,
+  `AIPFL_ALLOWED_ORIGINS`, `AIPFL_TRUST_PROXY`.
+- Training/run: `AIPFL_SEED`, `AIPFL_PARTITION`, `AIPFL_ALPHA`,
+  `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`, `AIPFL_REQUIRE_MANIFEST`.

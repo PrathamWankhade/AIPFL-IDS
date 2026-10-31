@@ -98,6 +98,7 @@ def load_nftoniotv2():
 
 
 CICIOT_CLASS_MAP = {
+    "BENIGNTRAFFIC": "BENIGN",
     "DDOS-ACK_FRAGMENTATION": "DDOS", "DDOS-HTTP_FLOOD": "DDOS", "DDOS-ICMP_FLOOD": "DDOS",
     "DDOS-ICMP_FRAGMENTATION": "DDOS", "DDOS-PSHACK_FLOOD": "DDOS", "DDOS-RSTFINFLOOD": "DDOS",
     "DDOS-SLOWLORIS": "DDOS", "DDOS-SYNONYMOUSIP_FLOOD": "DDOS", "DDOS-SYN_FLOOD": "DDOS",
@@ -114,51 +115,104 @@ def merge_ciciot_classes(label):
     return CICIOT_CLASS_MAP.get(label, label)
 
 
+# CSV rows are streamed in chunks: some mirrors ship a single multi-GB file
+# (e.g. train.csv = 1.6 GB) that cannot be read whole on a 7-8 GB box.
+CSV_CHUNK_ROWS = int(os.environ.get("AIPFL_CSV_CHUNK_ROWS", "400000"))
+
+
+def resolve_label_col(columns, configured=None):
+    """Case-insensitive label-column resolution.
+
+    Mirrors disagree on casing: official-shaped copies use `label`, others use
+    `Label` (and NF uses `Attack`). Fail loudly with the real column list
+    instead of a KeyError deep inside a 45M-row scan.
+    """
+    configured = configured or config.CICIOT2023_LABEL_COL
+    cols = [str(c) for c in columns]
+    if configured in cols:
+        return configured
+    lowered = {c.strip().lower(): c for c in cols}
+    hit = lowered.get(str(configured).strip().lower())
+    if hit is not None:
+        return hit
+    raise ValueError(
+        f"Label column '{configured}' not found. Columns present: {cols[:15]}"
+        + ("..." if len(cols) > 15 else ""))
+
+
+def normalize_ciciot_labels(df, label_col):
+    """Strip, uppercase and merge CICIoT labels into the 10 target classes.
+
+    Returns a FILTERED frame (rows with blank/NaN labels dropped) so callers
+    can assign it back without index misalignment.
+    """
+    s = df[label_col].astype(str).str.strip()
+    keep = ~s.isin(["nan", "", "NaN", "None"])
+    out = df.loc[keep].copy()
+    out[label_col] = s.loc[keep].str.upper().map(merge_ciciot_classes)
+    return out
+
+
 def load_ciciot2023():
     pattern = os.path.join(config.DATA_DIR, config.CICIOT2023_PATTERN)
     files = sorted(glob.glob(pattern))
     if not files:
         raise FileNotFoundError(
             f"No CICIoT2023 CSVs matched {pattern!r}. The raw dataset is not "
-            "bundled with this repository: fetch 'dhoogla/ciciot2023' (Kaggle) or "
-            "the original UNB release, then lay the CSVs out under "
-            "backend/data/raw/CICIoT2023 */. NF-ToN-IoT-V2 does not need this "
-            "step — it downloads itself on first run."
+            "bundled with this repository: fetch a CICIoT2023 mirror from "
+            "Kaggle (e.g. 'himadri07/ciciot2023') or the original UNB release, "
+            "then lay the CSVs out under backend/data/raw/CICIoT2023*/. "
+            "NF-ToN-IoT-V2 does not need this step — it downloads itself on "
+            "first run."
         )
     print(f"Loading CICIoT2023 from {len(files)} CSV files...")
+    # Mirrors mix `label`/`Label` ACROSS files; canonicalize to the configured
+    # name so downstream lookups via config.CICIOT2023_LABEL_COL keep working.
+    CANON = config.CICIOT2023_LABEL_COL
+
+    def canon_chunk(chunk, label_col):
+        if label_col != CANON:
+            chunk = chunk.rename(columns={label_col: CANON})
+        return normalize_ciciot_labels(chunk, CANON)
+
+    def iter_label_chunks(fpath):
+        """Stream a file's label column in chunks, normalized to merged classes."""
+        first = pd.read_csv(fpath, nrows=0)
+        label_col = resolve_label_col(first.columns)
+        for chunk in pd.read_csv(fpath, usecols=[label_col], chunksize=CSV_CHUNK_ROWS):
+            yield canon_chunk(chunk, label_col)
+
     # Pass 1: count per merged class (label column only) for unbiased fractions.
     totals = {}
     total_rows = 0
     for fpath in files:
-        chunk = pd.read_csv(fpath, usecols=[config.CICIOT2023_LABEL_COL])
-        chunk[config.CICIOT2023_LABEL_COL] = chunk[config.CICIOT2023_LABEL_COL].astype(str).str.strip()
-        chunk = chunk[~chunk[config.CICIOT2023_LABEL_COL].isin(["nan", "", "NaN", "None"])]
-        chunk[config.CICIOT2023_LABEL_COL] = chunk[config.CICIOT2023_LABEL_COL].map(merge_ciciot_classes)
-        total_rows += len(chunk)
-        vc = chunk[config.CICIOT2023_LABEL_COL].value_counts()
-        for k, v in vc.items():
-            totals[k] = totals.get(k, 0) + int(v)
+        for chunk in iter_label_chunks(fpath):
+            total_rows += len(chunk)
+            vc = chunk[CANON].value_counts()
+            for k, v in vc.items():
+                totals[k] = totals.get(k, 0) + int(v)
     fractions = {k: min(1.0, config.CICIOT2023_MAX_SAMPLES_PER_CLASS / max(1, v)) for k, v in totals.items()}
-    # Pass 2: stratified sample per file with fixed seeds.
+    # Pass 2: chunked stratified sampling per file with fixed per-chunk seeds.
     collected = {}
     for idx, fpath in enumerate(files):
-        chunk = pd.read_csv(fpath)
-        chunk[config.CICIOT2023_LABEL_COL] = chunk[config.CICIOT2023_LABEL_COL].astype(str).str.strip()
-        chunk = chunk[~chunk[config.CICIOT2023_LABEL_COL].isin(["nan", "", "NaN", "None"])]
-        chunk[config.CICIOT2023_LABEL_COL] = chunk[config.CICIOT2023_LABEL_COL].map(merge_ciciot_classes)
-        for attack in chunk[config.CICIOT2023_LABEL_COL].unique():
-            mask = chunk[config.CICIOT2023_LABEL_COL] == attack
-            attack_rows = chunk[mask]
-            frac = fractions.get(attack, 1.0)
-            if frac < 1.0 and len(attack_rows):
-                attack_rows = attack_rows.sample(frac=frac, random_state=int(config.RANDOM_STATE + idx) % (2**31 - 1))
-            if attack not in collected:
-                collected[attack] = attack_rows
-            else:
-                collected[attack] = pd.concat([collected[attack], attack_rows], ignore_index=True)
-        if idx % 10 == 0 or idx == len(files) - 1:
-            done = sum(len(v) for v in collected.values())
-            print(f"  [{idx+1}/{len(files)}] {done:>8,} sampled rows")
+        header = pd.read_csv(fpath, nrows=0)
+        label_col = resolve_label_col(header.columns)
+        for cidx, chunk in enumerate(pd.read_csv(fpath, chunksize=CSV_CHUNK_ROWS)):
+            chunk = canon_chunk(chunk, label_col)
+            if chunk.empty:
+                continue
+            for attack in chunk[CANON].unique():
+                attack_rows = chunk[chunk[CANON] == attack]
+                frac = fractions.get(attack, 1.0)
+                if frac < 1.0 and len(attack_rows):
+                    seed = int(config.RANDOM_STATE + idx * 1000 + cidx) % (2**31 - 1)
+                    attack_rows = attack_rows.sample(frac=frac, random_state=seed)
+                if attack not in collected:
+                    collected[attack] = attack_rows
+                else:
+                    collected[attack] = pd.concat([collected[attack], attack_rows], ignore_index=True)
+        done = sum(len(v) for v in collected.values())
+        print(f"  [{idx+1}/{len(files)}] {done:>8,} sampled rows")
     final_parts = []
     for attack, part in collected.items():
         if len(part) > config.CICIOT2023_MAX_SAMPLES_PER_CLASS:

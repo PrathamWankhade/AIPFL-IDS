@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import tensorflow as tf
 
@@ -171,6 +173,19 @@ def train_client(global_weights, X_client, y_client, input_dim, num_classes, cla
 
     loss, accuracy = client_model.evaluate(X_client, y_client, batch_size=config.BATCH_SIZE, verbose=0)
     weights = client_model.get_weights()
+    del client_model
+
+    # On memory-constrained hosts a 30-round x 10-client loop builds 300
+    # graphs; unreleased traces accumulate until the process aborts inside
+    # TF eager (native SIGABRT, no Python traceback). Clearing the Keras
+    # session after each client keeps resident memory flat. Verified safe
+    # for eager-mode models: the global model created before the loop still
+    # evaluates and saves afterwards. Opt out with AIPFL_CLEAR_SESSION=0.
+    if os.environ.get("AIPFL_CLEAR_SESSION", "1") == "1":
+        backend = getattr(getattr(tf, "keras", None), "backend", None)
+        clear = getattr(backend, "clear_session", None)
+        if callable(clear):
+            clear()
 
     for w in weights:
         if np.isnan(w).any() or np.isinf(w).any():

@@ -222,7 +222,9 @@ simulated FedAvg costs — the number to quote in a write-up.
 Env: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`, `AIPFL_MAX_BATCH_ROWS`,
 `AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`, `AIPFL_ALLOWED_ORIGINS`, `AIPFL_API_KEY`,
 `AIPFL_RATE_LIMIT_PER_MIN`, `AIPFL_TRUST_PROXY`, `AIPFL_REQUIRE_MANIFEST`, `AIPFL_SEED`,
-`AIPFL_PARTITION`, `AIPFL_ALPHA`, `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`.
+`AIPFL_PARTITION`, `AIPFL_ALPHA`, `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`,
+`AIPFL_CLEAR_SESSION` (default on; per-client `clear_session` keeps TF memory flat on
+small-RAM hosts — set `0` to disable), `AIPFL_CSV_CHUNK_ROWS` (CSV streaming chunk size).
 See `docs/DEPLOYMENT.md` and `docs/THREAT_MODEL.md`.
 
 ---
@@ -234,12 +236,14 @@ datasets keep their own research-use terms). Each dataset page carries its
 own citation and license; read it before redistributing anything.
 
 - **CICIoT2023**: ~45M records, 34 attack labels merged to 10 categories, 39
-  model features after preprocessing. **Not auto-downloaded** — fetch
-  `dhoogla/ciciot2023` from [Kaggle](https://www.kaggle.com/datasets/dhoogla/ciciot2023)
-  (or the original UNB release) and lay the CSVs out so they match
-  `backend/data/raw/CICIoT2023 */*.csv` (63 files across one or more
-  `CICIoT2023 *` folders). `train.py` aborts with an actionable error when no
-  files match.
+  model features after preprocessing. **Not auto-downloaded** — fetch a mirror
+  such as [`himadri07/ciciot2023`](https://www.kaggle.com/datasets/himadri07/ciciot2023)
+  (a verified full copy: 6.6M rows, all 34 original labels; the original UNB
+  release also works) and lay the CSVs out under `backend/data/raw/CICIoT2023*/`.
+  The loader streams multi-GB files in chunks, resolves the `label`/`Label`
+  column case-insensitively, and uppercases/merges labels — so both the
+  63-file original layout and single-`train.csv`/`test.csv` mirrors work.
+  `train.py` aborts with an actionable error when no files match.
 - **NF-ToN-IoT-V2**: ~13M records, 10 classes, 41 model features after
   preprocessing. **Auto-downloaded** from KaggleHub (`dhoogla/nftoniotv2`) on
   first run and cached at `backend/data/raw/NF-ToN-IoT-V2.parquet`.
