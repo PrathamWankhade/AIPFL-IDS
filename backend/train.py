@@ -230,6 +230,45 @@ def load_ciciot2023():
     return df
 
 
+# ── Durable round state: lets an OOM/restart resume instead of losing a run ──
+# One atomic .npz holds every weight array plus a JSON metadata key. Written
+# after each completed round via os.replace (atomic on POSIX and NTFS).
+def fl_state_path(dataset):
+    return config.RESULTS_DIR / f"fl_state_{dataset}.npz"
+
+
+def save_fl_state(path, round_num, weights, history, best_accuracy):
+    import io as _io
+    meta = {"round": int(round_num), "best_accuracy": float(best_accuracy),
+            "history": history, "n_weights": len(weights)}
+    buf = _io.BytesIO()
+    np.savez(buf, _meta=np.frombuffer(json.dumps(meta).encode("utf-8"), dtype=np.uint8),
+             **{f"w{i}": np.asarray(w) for i, w in enumerate(weights)})
+    tmp = path.with_suffix(".npz.tmp")
+    with open(tmp, "wb") as fh:
+        fh.write(buf.getvalue())
+    os.replace(tmp, path)
+
+
+def load_fl_state(path, global_model):
+    """Restore weights/history/best into the model. Returns (round, history, best) or None."""
+    if not path.exists():
+        return None
+    try:
+        with np.load(path) as z:
+            meta = json.loads(bytes(z["_meta"]).decode("utf-8"))
+            weights = [z[f"w{i}"] for i in range(meta["n_weights"])]
+    except Exception as e:
+        print(f"WARNING: unreadable FL state {path} ({e}); starting fresh.")
+        return None
+    current = global_model.get_weights()
+    if len(weights) != len(current) or any(a.shape != b.shape for a, b in zip(weights, current)):
+        print(f"WARNING: FL state {path} does not match this model architecture; starting fresh.")
+        return None
+    global_model.set_weights(weights)
+    return int(meta["round"]), meta.get("history") or {}, float(meta.get("best_accuracy", 0.0))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", choices=["CICIoT2023", "NF-ToN-IoT-V2"], default="CICIoT2023")
@@ -241,6 +280,8 @@ def main():
                     help="stratified: random rows; group: hold out whole groups (capture/device/time)")
     ap.add_argument("--group-col", default=None,
                     help="Column holding capture/device/session id for --split group")
+    ap.add_argument("--resume", action="store_true",
+                    help="Continue an interrupted federated run from its last completed round")
     args = ap.parse_args()
     dataset = args.dataset
     if args.seed is not None:
@@ -338,8 +379,31 @@ def main():
     global_model = create_model(input_dim, num_classes)
     global_model.summary()
 
+    # Resume support: restore the last completed round's state if requested.
+    start_round, initial_history, initial_best = 1, None, 0.0
+    state_path = fl_state_path(dataset)
+    if args.resume:
+        loaded = load_fl_state(state_path, global_model)
+        if loaded:
+            start_round, initial_history, initial_best = loaded
+            start_round = start_round + 1  # continue with the NEXT round
+            print(f"\nResuming from round {start_round} "
+                  f"(best val so far {initial_best:.4f}, "
+                  f"{len(initial_history.get('val_accuracy', []))} rounds recorded)")
+        else:
+            print("\nNo resumable state found; starting from round 1.")
+    elif state_path.exists():
+        print(f"\nNote: stale FL state at {state_path.name} — starting fresh "
+              f"(pass --resume to continue it).")
+
+    def _state_cb(round_num, weights, hist, best):
+        try:
+            save_fl_state(state_path, round_num, weights, hist, best)
+        except Exception as e:
+            print(f"  WARNING: could not write FL state ({e}); continuing.")
+
     print(f"\nTraining: {config.GLOBAL_ROUNDS} rounds, {config.EPOCHS_PER_CLIENT} epochs/client, {config.NUM_CLIENTS} clients, lr={config.LEARNING_RATE}")
-    result = federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, verbose=True, best_model_path=best_path, final_model_path=model_path, client_fraction=client_fraction, seed=config.SEED)
+    result = federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, verbose=True, best_model_path=best_path, final_model_path=model_path, client_fraction=client_fraction, seed=config.SEED, start_round=start_round, initial_history=initial_history, initial_best_accuracy=initial_best, state_callback=_state_cb)
 
     # ── P0 fix: metrics must describe the DEPLOYED checkpoint ──
     # 1. Persist preprocessing first so reload uses matching artifacts.
@@ -375,6 +439,9 @@ def main():
         "dataset": dataset,
         "best_val_accuracy": result["best_accuracy"],
         "final_val_accuracy": val_acc,
+        "rounds_executed_total": len(result["history"].get("val_accuracy", [])),
+        "invocation_start_round": int(start_round),
+        "resumed": int(start_round) > 1,
         "test_accuracy": eval_results["test_accuracy"],
         "test_loss": eval_results["test_loss"],
         "macro_f1": eval_results.get("macro_f1"),
@@ -444,6 +511,14 @@ def main():
             pass
     with open(config.RESULTS_DIR / f"release_{dataset}.json", "w") as f:
         json.dump(release, f, indent=2)
+
+    # Run completed end-to-end: drop the resume state so a later fresh run
+    # can't silently continue a finished trajectory.
+    try:
+        if state_path.exists():
+            state_path.unlink()
+    except OSError:
+        pass
 
     print(f"\n{'#'*60}\n{dataset} Training Complete!\nBest Val Accuracy: {result['best_accuracy']:.4f}\nTest Accuracy: {eval_results['test_accuracy']:.4f}\n{'#'*60}")
 

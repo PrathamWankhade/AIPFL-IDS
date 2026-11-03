@@ -198,7 +198,7 @@ def train_client(global_weights, X_client, y_client, input_dim, num_classes, cla
     return {"weights": weights, "loss": float(loss), "accuracy": float(accuracy), "samples": len(X_client), "delta_norm": float(delta_norm)}
 
 
-def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, global_rounds=None, verbose=True, best_model_path=None, final_model_path=None, class_weight=None, X_test=None, y_test=None, client_fraction=None, min_clients=None, seed=None):
+def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, input_dim, num_classes, global_rounds=None, verbose=True, best_model_path=None, final_model_path=None, class_weight=None, X_test=None, y_test=None, client_fraction=None, min_clients=None, seed=None, start_round=1, initial_history=None, initial_best_accuracy=0.0, state_callback=None):
     if global_rounds is None:
         global_rounds = config.GLOBAL_ROUNDS
     if best_model_path is None:
@@ -212,19 +212,30 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
     rng = np.random.default_rng(seed if seed is not None else config.SEED)
 
     global_weights = global_model.get_weights()
-    best_accuracy = 0.0
+    best_accuracy = float(initial_best_accuracy or 0.0)
 
     history = {"global_accuracy": [], "global_loss": [], "client_train_accuracy": [], "client_train_loss": [],
                # backward-compat aliases
                "client_accuracy": [], "client_loss": [],
                "val_accuracy": [], "val_loss": [],
                "participating_clients": [], "comm_bytes_upload": []}
+    if initial_history:
+        # Resume: carry prior rounds forward (backfills any missing key).
+        for _k, _v in initial_history.items():
+            history[_k] = list(_v)
 
     num_available = len(clients)
     per_round = max(int(min_clients), int(round(num_available * client_fraction)))
     per_round = max(1, min(num_available, per_round))
 
-    for round_num in range(1, global_rounds + 1):
+    # Resume: replay the participation draws consumed by the completed rounds
+    # so the client-sampling sequence continues exactly as an uninterrupted
+    # run would (one rng.permutation per round, at the top of each iteration).
+    start_round = max(1, int(start_round))
+    for _ in range(start_round - 1):
+        rng.permutation(num_available)
+
+    for round_num in range(start_round, global_rounds + 1):
         if verbose:
             print(f"\n{'='*60}")
             print(f"Global Round {round_num}/{global_rounds}")
@@ -316,6 +327,11 @@ def federated_training_loop(global_model, clients, client_sizes, X_val, y_val, i
             global_model.save(str(best_model_path))
             if verbose:
                 print(f"    ** New best model saved ({best_accuracy:.4f})")
+
+        # Durability: persist round state so an OOM/restart resumes instead of
+        # losing the whole run. Called only for rounds that completed fully.
+        if state_callback is not None:
+            state_callback(int(round_num), global_weights, history, best_accuracy)
 
     if verbose:
         print(f"\n{'='*60}")

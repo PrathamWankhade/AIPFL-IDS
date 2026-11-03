@@ -40,6 +40,7 @@ backend/data/kaggle-cache/
 # Results
 backend/results/*.png
 backend/results/*.json
+backend/results/fl_state_*
 
 # Build info
 *.tsbuildinfo

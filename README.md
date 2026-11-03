@@ -202,7 +202,14 @@ All endpoints at `/api/*` (proxied to Flask). Response format: `{success: bool, 
 | `/api/config` | GET | Server configuration (both datasets) |
 
 Training flags: `--seed`, `--partition iid|label_skew|quantity_skew`, `--alpha`, `--client-fraction`,
-`--split stratified|group`, `--group-col`.
+`--split stratified|group`, `--group-col`, `--resume`.
+
+`train.py` writes `results/fl_state_<dataset>.npz` after every completed round
+(atomic replace; gitignored). If a run dies mid-training — OOM, restart,
+Ctrl-C — rerun with `--resume` to continue from the last completed round: the
+client-participation RNG stream is replayed so the trajectory is identical to
+an uninterrupted run (covered by `tests/test_federated.py`). The state file is
+deleted after a successful full run.
 
 ### Baselines (how much does federation cost?)
 
