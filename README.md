@@ -278,9 +278,8 @@ own citation and license; read it before redistributing anything.
 
 ## Model Artifacts
 
-Training writes the following files to `backend/models/` (all **gitignored** —
-a fresh clone has no trained model until you run `train.py`, so `/predict`
-and the dashboard metrics stay inactive until then):
+Trained artifacts are **committed** so a fresh clone serves predictions and
+dashboard metrics out of the box (no retraining required):
 
 | File | Purpose |
 |------|---------|
@@ -290,8 +289,16 @@ and the dashboard metrics stay inactive until then):
 | `scaler_nftoniotv2.pkl` | StandardScaler (NF-ToN-IoT-V2) |
 | `encoder_ciciot2023.pkl` | LabelEncoder (CICIoT2023) |
 | `encoder_nftoniotv2.pkl` | LabelEncoder (NF-ToN-IoT-V2) |
-| `best_CICIoT2023_Federated_Model.keras` | Best checkpoint (CICIoT2023) |
-| `best_NF_ToN_IoT_Federated_Model.keras` | Best checkpoint (NF-ToN-IoT-V2) |
+| `features_ciciot2023.pkl` | Feature-column list (CICIoT2023) |
+| `features_nftoniotv2.pkl` | Feature-column list (NF-ToN-IoT-V2) |
+| `best_CICIoT2023_Federated_Model.keras` | Best-val checkpoint (CICIoT2023) |
+| `best_NF_ToN_IoT_Federated_Model.keras` | Best-val checkpoint (NF-ToN-IoT-V2) |
+
+Each `backend/results/release_<dataset>.json` manifest records the sha256 of
+every artifact plus metrics provenance; `training_summary_<dataset>.json` and
+`<dataset>_test_metrics.json` carry the full per-class report. Verify integrity
+after cloning by re-hashing the model/scaler/encoder/feature files against the
+manifest.
 
 ---
 

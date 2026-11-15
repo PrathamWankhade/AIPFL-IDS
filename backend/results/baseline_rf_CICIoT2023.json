@@ -1,0 +1,94 @@
+{
+  "model": "rf",
+  "test_accuracy": 0.9284573814787521,
+  "macro_f1": 0.8604909994363238,
+  "balanced_accuracy": 0.8291003347375444,
+  "per_class": {
+    "BENIGN": {
+      "precision": 0.8631657494636694,
+      "recall": 0.9254,
+      "f1": 0.8932001351286135
+    },
+    "DDOS": {
+      "precision": 0.999499399279135,
+      "recall": 0.9983,
+      "f1": 0.9988993396037622
+    },
+    "DICTIONARYBRUTEFORCE": {
+      "precision": 0.9935064935064936,
+      "recall": 0.4112903225806452,
+      "f1": 0.5817490494296578
+    },
+    "DNS_SPOOFING": {
+      "precision": 0.8530290102389079,
+      "recall": 0.7754508435136708,
+      "f1": 0.8123920771965465
+    },
+    "DOS": {
+      "precision": 0.9990996398559424,
+      "recall": 0.9987,
+      "f1": 0.9988997799559912
+    },
+    "MIRAI": {
+      "precision": 0.9996996696366003,
+      "recall": 0.9986,
+      "f1": 0.9991495322427335
+    },
+    "MITM-ARPSPOOFING": {
+      "precision": 0.9090048514968643,
+      "recall": 0.8698901596648171,
+      "f1": 0.8890174748293022
+    },
+    "OTHER": {
+      "precision": 0.9419354838709677,
+      "recall": 0.42318840579710143,
+      "f1": 0.584
+    },
+    "RECON": {
+      "precision": 0.8281938325991189,
+      "recall": 0.8958333333333334,
+      "f1": 0.8606867181261645
+    },
+    "VULNERABILITYSCAN": {
+      "precision": 0.9795918367346939,
+      "recall": 0.9943502824858758,
+      "f1": 0.9869158878504672
+    }
+  },
+  "ece": 0.043952709491751674,
+  "benign_fpr": 0.0746,
+  "fit_seconds": 21.066484212875366,
+  "predict_seconds": 0.9139916896820068,
+  "n_train": 211688,
+  "n_test": 65136,
+  "seed": 42,
+  "params": {
+    "n_estimators": 200,
+    "max_iter": 1000
+  },
+  "dataset": "CICIoT2023",
+  "split": {
+    "train": 211688,
+    "val": 48852,
+    "test": 65136,
+    "test_split": 0.2,
+    "val_split": 0.15,
+    "seed": 42,
+    "split_mode": "stratified",
+    "protocol": "stratified-raw-first; preprocess-fit-train-only; test-once"
+  },
+  "dataset_fingerprint": "594958ca46109201c00d65805fbb44209fcef2857c8a3bdac351d93545be2a9a",
+  "rows_sampled": 325676,
+  "classes": [
+    "BENIGN",
+    "DDOS",
+    "DICTIONARYBRUTEFORCE",
+    "DNS_SPOOFING",
+    "DOS",
+    "MIRAI",
+    "MITM-ARPSPOOFING",
+    "OTHER",
+    "RECON",
+    "VULNERABILITYSCAN"
+  ]
+}

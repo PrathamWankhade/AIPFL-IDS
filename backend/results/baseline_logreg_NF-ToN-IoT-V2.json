@@ -1,0 +1,93 @@
+{
+  "model": "logreg",
+  "test_accuracy": 0.7903719506539282,
+  "macro_f1": 0.7697985045176334,
+  "balanced_accuracy": 0.7609030767691084,
+  "per_class": {
+    "Benign": {
+      "precision": 0.7825460533086344,
+      "recall": 0.7604,
+      "f1": 0.7713140944362733
+    },
+    "backdoor": {
+      "precision": 0.9959752321981424,
+      "recall": 0.9892373923739237,
+      "f1": 0.9925948781240358
+    },
+    "ddos": {
+      "precision": 0.893771026608217,
+      "recall": 0.8767,
+      "f1": 0.8851532131859255
+    },
+    "dos": {
+      "precision": 0.6967431532198372,
+      "recall": 0.9413,
+      "f1": 0.800765631646108
+    },
+    "injection": {
+      "precision": 0.7516496018202503,
+      "recall": 0.6607,
+      "f1": 0.7032464076636509
+    },
+    "mitm": {
+      "precision": 0.5159914712153518,
+      "recall": 0.3132686084142395,
+      "f1": 0.3898509867096255
+    },
+    "password": {
+      "precision": 0.7537007312288211,
+      "recall": 0.8452845284528453,
+      "f1": 0.7968698439636073
+    },
+    "ransomware": {
+      "precision": 0.8707482993197279,
+      "recall": 0.7630402384500745,
+      "f1": 0.8133439237490071
+    },
+    "scanning": {
+      "precision": 0.8506962621715004,
+      "recall": 0.8125,
+      "f1": 0.8311595314817657
+    },
+    "xss": {
+      "precision": 0.7963054187192118,
+      "recall": 0.6466,
+      "f1": 0.7136865342163355
+    }
+  },
+  "ece": 0.06318680932752113,
+  "benign_fpr": 0.2396,
+  "fit_seconds": 66.44896745681763,
+  "predict_seconds": 0.040819406509399414,
+  "n_train": 245265,
+  "n_test": 75467,
+  "seed": 42,
+  "params": {
+    "max_iter": 1000
+  },
+  "dataset": "NF-ToN-IoT-V2",
+  "split": {
+    "train": 245265,
+    "val": 56600,
+    "test": 75467,
+    "test_split": 0.2,
+    "val_split": 0.15,
+    "seed": 42,
+    "split_mode": "stratified",
+    "protocol": "stratified-raw-first; preprocess-fit-train-only; test-once"
+  },
+  "dataset_fingerprint": "abf64c923fa2bb613715a7b038e0511809d41f4042f7f01b2fc708743ed550eb",
+  "rows_sampled": 377332,
+  "classes": [
+    "Benign",
+    "backdoor",
+    "ddos",
+    "dos",
+    "injection",
+    "mitm",
+    "password",
+    "ransomware",
+    "scanning",
+    "xss"
+  ]
+}

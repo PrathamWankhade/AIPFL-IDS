@@ -14,8 +14,6 @@ build/
 
 # Runtime
 backend/uploads/
-backend/models/*.keras
-backend/models/*.pkl
 
 # Environment
 .env
@@ -37,9 +35,8 @@ backend/data/raw/
 backend/data/processed/
 backend/data/kaggle-cache/
 
-# Results
-backend/results/*.png
-backend/results/*.json
+# Results (committed: trained artifacts ship with the repo so a fresh clone
+# serves predictions/metrics; per-round resume state stays transient)
 backend/results/fl_state_*
 
 # Build info

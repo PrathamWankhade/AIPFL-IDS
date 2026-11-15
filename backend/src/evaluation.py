@@ -110,7 +110,9 @@ def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=No
 def plot_training_history(history, save_dir=None, prefix=""):
     if save_dir is None:
         save_dir = config.RESULTS_DIR
-    prefix = f"{prefix}_" if prefix else ""
+    # Tolerate a prefix that already ends in "_" (evaluate_model scopes its own
+    # filenames) — never stack separators into `ds__accuracy_plot.png`.
+    prefix = f"{prefix.rstrip('_')}_" if prefix else ""
 
     epochs = range(1, len(history["global_accuracy"]) + 1)
 

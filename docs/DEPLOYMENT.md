@@ -41,11 +41,11 @@
 - Release artifacts (`backend/models/`, `backend/results/release_*.json`)
   are trusted, versioned, integrity-checked (sha256 in manifest). Never load
   joblib/pickle artifacts from untrusted sources.
-- Those artifacts are **gitignored**: `train.py` writes
+- Those artifacts are **committed**: `train.py` writes
   `results/release_<dataset>.json` (model + scaler + encoder + schema hashes)
-  on every run, and a fresh clone ships none of them. Produce or copy the
-  full artifact set (model, scaler, encoder, features, summary, manifest)
-  before tightening verification.
+  on every run, and a fresh clone ships the full artifact set (model, scaler,
+  encoder, features, summary, manifest). After retraining, commit the updated
+  models and manifests together so hashes always match the shipped weights.
 - Set `AIPFL_REQUIRE_MANIFEST=1` in production: model loading then refuses
   a missing manifest, an incomplete hash set, a dataset mismatch, or any
   tampered artifact. A colocated manifest detects mismatch, not forgery —

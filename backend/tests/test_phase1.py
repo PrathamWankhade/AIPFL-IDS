@@ -93,11 +93,21 @@ def test_evaluate_model_prefix_scopes_artifacts_per_dataset(tmp_path):
 
     for ds in ["CICIoT2023", "NF-ToN-IoT-V2"]:
         ev.evaluate_model(Stub(), np.zeros((n, 4)), y, ["a", "b", "c"],
-                          history=None, save_dir=tmp_path, prefix=ds)
+                          history={"global_accuracy": [0.5, 0.6],
+                                   "client_accuracy": [0.4, 0.5],
+                                   "global_loss": [1.0, 0.9],
+                                   "client_loss": [1.1, 1.0]},
+                          save_dir=tmp_path, prefix=ds)
     # Each dataset kept its own confusion matrix + metrics file.
     assert (tmp_path / "CICIoT2023_confusion_matrix.png").exists()
     assert (tmp_path / "NF-ToN-IoT-V2_confusion_matrix.png").exists()
     assert (tmp_path / "CICIoT2023_test_metrics.json").exists()
     assert (tmp_path / "NF-ToN-IoT-V2_test_metrics.json").exists()
+    # History plots are scoped with a SINGLE separator (regression: the prefix
+    # used to be suffixed twice, producing `CICIoT2023__accuracy_plot.png`).
+    for ds in ["CICIoT2023", "NF-ToN-IoT-V2"]:
+        assert (tmp_path / f"{ds}_accuracy_plot.png").exists()
+        assert (tmp_path / f"{ds}_loss_plot.png").exists()
+        assert not (tmp_path / f"{ds}__accuracy_plot.png").exists()
     # Un-prefixed names are not produced when a prefix is given.
     assert not (tmp_path / "confusion_matrix.png").exists()
