@@ -86,7 +86,7 @@ export default function Contact() {
             </p>
             <ul className="check-list" style={{ marginBottom: 20 }}>
               <li><i className="fa-solid fa-circle-info" /> Trained models and raw datasets are not committed — train first (see README).</li>
-              <li><i className="fa-solid fa-circle-info" /> Published accuracy figures are historical and pending a clean retrain.</li>
+              <li><i className="fa-solid fa-circle-info" /> Published accuracy figures come from the latest training run; reproduce commands are in the README.</li>
               <li><i className="fa-solid fa-circle-info" /> Federated training is an in-process simulation; no secure aggregation or DP.</li>
               <li><i className="fa-solid fa-circle-info" /> Predictions are uncalibrated model outputs, not confirmed incidents.</li>
             </ul>

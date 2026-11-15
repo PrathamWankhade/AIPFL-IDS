@@ -135,39 +135,56 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 | `LEARNING_RATE` | 0.001 | Adam learning rate |
 | `DENSE_UNITS` | [512,256,128] | Hidden layers |
 
-### CICIoT2023 Results (historical — do not cite without re-running)
+### CICIoT2023 Results (release 2026-11-15)
 
-> **Provenance warning.** These numbers were produced on 2026‑07‑01 by an
-> earlier pipeline revision, *before* the split-before-preprocess and
-> val-only-checkpoint fixes. In `training_summary_CICIoT2023.json` the
-> `best_accuracy` (validation) and `test_accuracy` values are **bit-identical**
-> (`0.7135392427444458`), which is only possible when the checkpoint is
-> selected on the set it is reported on. Treat them as optimistic and re-run
-> `train.py` with the current code before citing anything.
-
+Produced by the current leak-free pipeline: raw-first split, preprocessing fit
+on train only, checkpoint selected on validation only, test evaluated once.
+Full provenance (metrics, per-class F1, client histograms, sha256 manifest) in
+`training_summary_CICIoT2023.json` and `release_CICIoT2023.json`.
 
 | Metric | Value |
 |--------|-------|
-| Test Accuracy | **71.35%** |
-| Input Features | 39 |
+| Test Accuracy | **79.13%** |
+| Macro-F1 | 68.24% |
+| Balanced Accuracy | 66.72% |
+| Expected Calibration Error | 0.71% |
+| Benign FPR | 14.22% |
+| Best Val Accuracy | 79.32% |
+| Input Features | 42 |
 | Attack Classes | 10 (merged from 34 original labels: DDOS, DOS, MIRAI, RECON, BENIGN, DICTIONARYBRUTEFORCE, DNS_SPOOFING, MITM-ARPSPOOFING, VULNERABILITYSCAN, OTHER) |
-| Training Samples | 436,321 (balanced, 50K max/class) |
-| Raw Records | 45,019,243 |
+| Balanced Samples | 325,676 (train split 211,688, 50K max/class) |
+| Raw Records | 6,668,822 (Kaggle mirror) |
 
-### NF-ToN-IoT-V2 Results (historical — do not cite without re-running)
-
-> Same provenance issue: `best_accuracy` and `test_accuracy` are both
-> `0.799199640750885` in `training_summary_NF-ToN-IoT-V2.json`. The summary
-> also predates macro-F1, ECE, per-class and partition reporting.
-
+### NF-ToN-IoT-V2 Results (release 2026-11-04)
 
 | Metric | Value |
 |--------|-------|
-| Test Accuracy | **79.92%** |
+| Test Accuracy | **91.27%** |
+| Macro-F1 | 88.62% |
+| Balanced Accuracy | 87.43% |
+| Expected Calibration Error | 0.83% |
+| Benign FPR | 5.76% |
+| Best Val Accuracy | 91.36% |
 | Input Features | 41 |
 | Attack Classes | 10 (Benign, DDoS, DoS, Injection, Ransomware, Scanning, XSS, Backdoor, Password, MITM) |
-| Training Samples | 377,339 (balanced, 50K max/class) |
-| Raw Records | ~13M |
+| Balanced Samples | 377,332 (train split 245,265, 50K max/class) |
+| Raw Records | 13,135,881 |
+
+### Centralized baselines (same split — `backend/baselines.py`)
+
+| Dataset | Model | Test Acc | Macro-F1 |
+|---------|-------|----------|----------|
+| CICIoT2023 | FedAvg DNN (simulated, this repo) | 79.13% | 68.24% |
+| CICIoT2023 | Random Forest (centralized) | 92.85% | 86.05% |
+| CICIoT2023 | Logistic Regression (centralized) | 71.46% | 52.66% |
+| NF-ToN-IoT-V2 | FedAvg DNN (simulated, this repo) | 91.27% | 88.62% |
+| NF-ToN-IoT-V2 | Random Forest (centralized) | 94.08% | 91.90% |
+| NF-ToN-IoT-V2 | Logistic Regression (centralized) | 79.04% | 76.98% |
+
+Baselines use the identical raw-first split and preprocessing protocol, so the
+comparison is apples-to-apples: FedAvg comfortably beats a linear model and
+trails an ensemble of trees — the honest cost of averaging a small DNN across
+10 simulated clients.
 
 ---
 
@@ -175,7 +192,7 @@ python train.py --dataset NF-ToN-IoT-V2  # Balanced 50K/class, 10 classes
 
 - **Dual-Dataset Architecture**: CICIoT2023 (34 original labels mapped to 10 categories) and NF-ToN-IoT-V2 (10 classes), with separate scalers, encoders, and models
 - **Robust Preprocessing**: `clip_extreme()` handles extreme byte-rate features (up to 1e+261) using percentile-based clipping
-- **Streaming Batch Loading**: 200K-row batches for memory-efficient processing of 45M+ records
+- **Streaming Batch Loading**: 400K-row chunks for memory-efficient processing of the 6.67M-row CICIoT2023 raw CSVs
 - **Federated Averaging (FedAvg)**: 10 simulated clients, weighted aggregation, configurable rounds/epochs, IID or Dirichlet non-IID partitions
 - **Dual-Model API**: Select dataset via `?dataset=CICIoT2023` or `?dataset=NF-ToN-IoT-V2` query parameter
 - **Bold UI**: high-contrast yellow/blue identity, subtle borders, consistent 8–12px radii, keyboard focus states, reduced-motion support
@@ -242,16 +259,18 @@ Raw data is **not** committed (`backend/data/raw/` is gitignored — the
 datasets keep their own research-use terms). Each dataset page carries its
 own citation and license; read it before redistributing anything.
 
-- **CICIoT2023**: ~45M records, 34 attack labels merged to 10 categories, 39
-  model features after preprocessing. **Not auto-downloaded** — fetch a mirror
+- **CICIoT2023**: 6,668,822 records in the mirror we use, 34 attack labels
+  merged to 10 categories, 42 model features after preprocessing. **Not
+  auto-downloaded** — fetch a mirror
   such as [`himadri07/ciciot2023`](https://www.kaggle.com/datasets/himadri07/ciciot2023)
-  (a verified full copy: 6.6M rows, all 34 original labels; the original UNB
-  release also works) and lay the CSVs out under `backend/data/raw/CICIoT2023*/`.
+  (a verified mirror: 6,668,822 rows, all 34 original labels; other mirrors
+  and the original UNB release also work) and lay the CSVs out under
+  `backend/data/raw/CICIoT2023*/`.
   The loader streams multi-GB files in chunks, resolves the `label`/`Label`
-  column case-insensitively, and uppercases/merges labels — so both the
-  63-file original layout and single-`train.csv`/`test.csv` mirrors work.
+  column case-insensitively, and uppercases/merges labels — so multi-file and
+  single-`train.csv`/`test.csv` layouts both work.
   `train.py` aborts with an actionable error when no files match.
-- **NF-ToN-IoT-V2**: ~13M records, 10 classes, 41 model features after
+- **NF-ToN-IoT-V2**: 13,135,881 records, 10 classes, 41 model features after
   preprocessing. **Auto-downloaded** from KaggleHub (`dhoogla/nftoniotv2`) on
   first run and cached at `backend/data/raw/NF-ToN-IoT-V2.parquet`.
 

@@ -104,7 +104,7 @@ export default function Dashboard() {
         </div>
 
         {/* Zone B — stored evaluation metrics */}
-        <h2 style={{ fontSize: '1rem', marginBottom: 12 }}><ZoneLabel kind="stored">from /api/metrics · historical test runs</ZoneLabel></h2>
+        <h2 style={{ fontSize: '1rem', marginBottom: 12 }}><ZoneLabel kind="stored">from /api/metrics · stored test results</ZoneLabel></h2>
         <div className="grid-4" style={{ marginBottom: 36 }}>
           <DashboardMetric label="CICIoT2023 test acc" value={mCici ? fmt(mCici.test_accuracy) : '—'} change={mCici ? `macro-F1 ${fmtMacro(mCici)} · ${mCici.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>
           <DashboardMetric label="NF-ToN-V2 test acc" value={mNfton ? fmt(mNfton.test_accuracy) : '—'} change={mNfton ? `macro-F1 ${fmtMacro(mNfton)} · ${mNfton.partition || 'iid'}` : 'Not measured'}>%</DashboardMetric>

@@ -12,10 +12,10 @@ export default function About() {
 
         <div className="about-stats">
           {[
-            { value: '58M', label: 'Total Records' },
-            { value: '79.92%', label: 'Best Accuracy' },
+            { value: '19.8M', label: 'Raw Records' },
+            { value: '91.27%', label: 'Best Test Accuracy' },
             { value: '44', label: 'Total Classes' },
-            { value: '10', label: 'Global Rounds' },
+            { value: '30', label: 'Global Rounds' },
           ].map((s, i) => (
             <div key={i} className="about-stat reveal">
               <h3>{s.value}</h3>
@@ -47,11 +47,11 @@ export default function About() {
         </div>
         <div className="timeline" style={{ marginBottom: 70 }}>
           {[
-            { num: '01', title: 'Data Collection & Balancing', desc: 'IoT network traffic from CICIoT2023 (45M records, 10 merged classes) and NF-ToN-IoT-V2 (13M records, 10 classes). Each attack category is sampled up to 50K records to create balanced 436K+377K subsets.' },
+            { num: '01', title: 'Data Collection & Balancing', desc: 'IoT network traffic from CICIoT2023 (6.67M records, 10 merged classes) and NF-ToN-IoT-V2 (13.1M records, 10 classes). Each attack category is sampled up to 50K records to create balanced 326K+377K subsets.' },
             { num: '02', title: 'Preprocessing & Feature Engineering', desc: 'Infinite and extreme values are clipped via percentile-based bounds, constant features removed with VarianceThreshold, and features standardized with StandardScaler per dataset.' },
-            { num: '03', title: 'Federated Training', desc: 'Each dataset is split among 10 simulated clients. Each client trains a deep neural network locally for 3 epochs per global round. Only model weights — never data — are shared with the central server.' },
+            { num: '03', title: 'Federated Training', desc: 'Each dataset is split among 10 simulated clients. Each client trains a deep neural network locally for 5 epochs per global round. Only model weights — never data — are shared with the central server.' },
             { num: '04', title: 'Federated Averaging (FedAvg)', desc: 'The central server aggregates client updates using weighted Federated Averaging. Larger client datasets contribute proportionally more. Invalid updates are discarded for stability.' },
-            { num: '05', title: 'AI Prediction & Evaluation', desc: 'CICIoT2023 achieves 71.35% test accuracy across 10 classes. NF-ToN-IoT-V2 achieves 79.92% across 10 classes including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
+            { num: '05', title: 'AI Prediction & Evaluation', desc: 'CICIoT2023 achieves 79.13% test accuracy across 10 classes. NF-ToN-IoT-V2 achieves 91.27% across 10 classes including DDoS, DoS, Ransomware, Injection, XSS, and more.' },
           ].map((s, i) => (
             <div key={i} className="timeline-item reveal">
               <div className="timeline-number">{s.num}</div>
@@ -83,10 +83,10 @@ export default function About() {
           <div className="card-feature reveal-right">
             <h3>Training Configuration</h3>
             <ul className="check-list" style={{ marginTop: 14 }}>
-              <li><i className="fa-solid fa-check" /> Optimizer: Adam (lr=0.0005, clipnorm=1.0)</li>
+              <li><i className="fa-solid fa-check" /> Optimizer: Adam (lr=0.001, clipnorm=1.0)</li>
               <li><i className="fa-solid fa-check" /> Loss: Sparse Categorical Crossentropy</li>
-              <li><i className="fa-solid fa-check" /> 10 clients, 10 global communication rounds</li>
-              <li><i className="fa-solid fa-check" /> 3 local epochs per round per client</li>
+              <li><i className="fa-solid fa-check" /> 10 clients, 30 global communication rounds</li>
+              <li><i className="fa-solid fa-check" /> 5 local epochs per round per client</li>
               <li><i className="fa-solid fa-check" /> Mixed Precision (float16) for GPU efficiency</li>
               <li><i className="fa-solid fa-check" /> EarlyStopping & ReduceLROnPlateau callbacks</li>
             </ul>
@@ -100,9 +100,9 @@ export default function About() {
         </div>
         <div className="grid-4">
           {[
-            { value: '79.92', suffix: '%', label: 'NF-ToN-V2 Accuracy' },
-            { value: '71.35', suffix: '%', label: 'CICIoT2023 Accuracy' },
-            { value: '537', suffix: 'K', label: 'Total Samples' },
+            { value: '91.27', suffix: '%', label: 'NF-ToN-V2 Test Accuracy' },
+            { value: '79.13', suffix: '%', label: 'CICIoT2023 Test Accuracy' },
+            { value: '703', suffix: 'K', label: 'Total Samples' },
             { value: '44', suffix: '', label: 'Attack Classes' },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal">

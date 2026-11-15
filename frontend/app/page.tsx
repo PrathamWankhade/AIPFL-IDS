@@ -59,18 +59,18 @@ export default function Home() {
                   <div className="dashboard-live"><span className="live-dot" /> Demo</div>
                 </div>
                 <div className="dashboard-status">
-                  <small>NF-ToN-V2 Accuracy (historical)</small>
-                  <h2 data-count-to="79.92" data-count-suffix="%">79.92%</h2>
+                  <small>NF-ToN-V2 Test Accuracy</small>
+                  <h2 data-count-to="91.27" data-count-suffix="%">91.27%</h2>
                   <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center', gap: 14 }}>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CICIoT2023: <strong style={{ color: 'var(--black)' }}>71.35% (hist.)</strong></span>
+                    <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CICIoT2023: <strong style={{ color: 'var(--black)' }}>79.13%</strong></span>
                     <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>Classes: <strong style={{ color: 'var(--black)' }}>10+10</strong></span>
                   </div>
-                  <small style={{ color: 'var(--text-muted)' }}>Historical benchmarks — live status on /dashboard</small>
+                  <small style={{ color: 'var(--text-muted)' }}>Test-set accuracy, current release — live status on /dashboard</small>
                 </div>
                 <div className="metric-grid">
                   <div className="metric-card"><small>Attack Classes</small><h3>10+10</h3></div>
-                  <div className="metric-card"><small>Features</small><h3>39+41</h3></div>
-                  <div className="metric-card"><small>Sampled Rows</small><h3>814K</h3></div>
+                  <div className="metric-card"><small>Features</small><h3>42+41</h3></div>
+                  <div className="metric-card"><small>Sampled Rows</small><h3>703K</h3></div>
                   <div className="metric-card"><small>Fed Clients</small><h3>10</h3></div>
                 </div>
                 <div className="dashboard-graph">
@@ -104,11 +104,11 @@ export default function Home() {
           </div>
           <div className="pipeline">
             {[
-              { num: '01', icon: 'fa-solid fa-database', title: 'Streaming Load', desc: '45M + 13M records from CICIoT2023 and NF-ToN-IoT-V2' },
-              { num: '02', icon: 'fa-solid fa-scale-balanced', title: 'Per-Class Balance', desc: '50K max/class, 10+10 classes, 814K total balanced' },
-              { num: '03', icon: 'fa-solid fa-sliders', title: 'Standard Scaling', desc: '39 + 41 features normalized per dataset' },
+              { num: '01', icon: 'fa-solid fa-database', title: 'Streaming Load', desc: '6.67M + 13.1M raw records from CICIoT2023 and NF-ToN-IoT-V2' },
+              { num: '02', icon: 'fa-solid fa-scale-balanced', title: 'Per-Class Balance', desc: '50K max/class, 10+10 classes, 703K total balanced' },
+              { num: '03', icon: 'fa-solid fa-sliders', title: 'Standard Scaling', desc: '42 + 41 features normalized per dataset' },
               { num: '04', icon: 'fa-solid fa-network-wired', title: 'FedAvg Training', desc: '10 simulated clients, weighted aggregation, configurable rounds' },
-              { num: '05', icon: 'fa-solid fa-chart-bar', title: 'Evaluation', desc: 'Historical 71.35% / 79.92% accuracy, confusion matrices' },
+              { num: '05', icon: 'fa-solid fa-chart-bar', title: 'Evaluation', desc: '79.13% / 91.27% test accuracy, confusion matrices' },
               { num: '06', icon: 'fa-solid fa-shield-halved', title: 'Inference', desc: 'Dual-model API with dataset selection' },
             ].map((s, i) => (
               <div key={i} className="pipeline-step reveal">
@@ -135,7 +135,7 @@ export default function Home() {
               { icon: 'fa-solid fa-brain', title: 'TensorFlow / Keras', desc: 'DNN: 512 → 256 → 128 → 10 classes per dataset.' },
               { icon: 'fa-solid fa-flask', title: 'Flask API', desc: '6 REST endpoints for prediction, status, config.' },
               { icon: 'fa-solid fa-network-wired', title: 'Federated Averaging', desc: 'FedAvg aggregates simulated client weights (no secure aggregation yet).' },
-              { icon: 'fa-solid fa-table', title: 'Parquet / Pandas', desc: '58M records from two datasets loaded in batches.' },
+              { icon: 'fa-solid fa-table', title: 'Parquet / Pandas', desc: '20M raw records from two datasets loaded in batches.' },
               { icon: 'fa-brands fa-react', title: 'Next.js 14', desc: 'App router, server components, API proxy.' },
             ].map((t, i) => (
               <div key={i} className="card-feature reveal">
@@ -157,11 +157,11 @@ export default function Home() {
           </div>
           <div className="timeline">
             {[
-              { num: '01', title: 'Collect & Load', desc: 'CICIoT2023 (45M rows, 10 cls) + NF-ToN-IoT-V2 (13M rows, 10 cls) loaded in streaming batches.' },
-              { num: '02', title: 'Preprocess & Balance', desc: '39 / 41 features standardized, class-balanced at 5K / 50K max per class.' },
+              { num: '01', title: 'Collect & Load', desc: 'CICIoT2023 (6.67M rows, 10 cls) + NF-ToN-IoT-V2 (13.1M rows, 10 cls) loaded in streaming batches.' },
+              { num: '02', title: 'Preprocess & Balance', desc: '42 / 41 features standardized, class-balanced at 50K max per class.' },
               { num: '03', title: 'Federated Training', desc: '10 simulated clients train locally for several epochs per round in one process — simulation, not distributed devices.' },
               { num: '04', title: 'Global Aggregation', desc: 'FedAvg merges local weight updates into a global DNN model.' },
-              { num: '05', title: 'Evaluate & Deploy', desc: 'Historical 71.35% / 79.92% accuracy. Confusion matrices, precision, recall computed.' },
+              { num: '05', title: 'Evaluate & Deploy', desc: '79.13% / 91.27% test accuracy. Confusion matrices, precision, recall computed.' },
               { num: '06', title: 'Real-Time Inference', desc: 'Flask API serves predictions with dataset selectable via query param.' },
             ].map((s, i) => (
               <div key={i} className="timeline-item reveal">
@@ -200,12 +200,12 @@ export default function Home() {
                 <div style={{ padding: 22 }}>
                   <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                     <div style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--yellow)', border: 'var(--border-thick)' }}>
-                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--black)', fontWeight: 700, marginBottom: 2 }}>NF-ToN-V2 (hist.)</small>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em' }}>79.92%</span>
+                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--black)', fontWeight: 700, marginBottom: 2 }}>NF-ToN-V2 Test Acc</small>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em' }}>91.27%</span>
                     </div>
                     <div style={{ flex: 1, textAlign: 'center', padding: 10, background: 'var(--bg)', border: 'var(--border-thick)' }}>
-                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 2 }}>CICIoT2023 (hist.)</small>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>71.35%</span>
+                      <small style={{ display: 'block', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 2 }}>CICIoT2023 Test Acc</small>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>79.13%</span>
                     </div>
                   </div>
                   <svg viewBox="0 0 260 80" style={{ width: '100%', display: 'block', marginBottom: 14 }}>
@@ -227,7 +227,7 @@ export default function Home() {
                     <text x="200" y="82" fontSize="5" fill="var(--text-muted)" fontFamily="monospace">R10</text>
                   </svg>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                    {[{ l: 'CICIoT (hist.)', v: '71.35%' }, { l: 'NF-ToN (hist.)', v: '79.92%' }, { l: 'Classes', v: '10+10' }, { l: 'Clients', v: '10' }].map((c, i) => (
+                    {[{ l: 'CICIoT Test', v: '79.13%' }, { l: 'NF-ToN Test', v: '91.27%' }, { l: 'Classes', v: '10+10' }, { l: 'Clients', v: '10' }].map((c, i) => (
                       <div key={i} style={{ padding: 12, background: 'var(--bg)', border: 'var(--border-thick)', textAlign: 'center' }}>
                         <small style={{ display: 'block', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', marginBottom: 2 }}>{c.l}</small>
                         <strong style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', letterSpacing: '0.06em' }}>{c.v}</strong>
@@ -246,13 +246,13 @@ export default function Home() {
           <div className="section-header reveal">
             <SectionTag>Performance</SectionTag>
             <h2>Reported Training Metrics</h2>
-            <p>Historical results from two trained federated DNN models — CICIoT2023 (10 merged categories) and NF-ToN-IoT-V2 (10 classes). Reproduce with the released model before citing.</p>
+            <p>Test-set results from two trained federated DNN models — CICIoT2023 (10 merged categories) and NF-ToN-IoT-V2 (10 classes). Reproduce with the released model before citing.</p>
           </div>
           <div className="grid-4">
             {[
-              { value: '79.92', suffix: '%', label: 'NF-ToN-V2 Accuracy (hist.)' },
-              { value: '71.35', suffix: '%', label: 'CICIoT2023 Accuracy (hist.)' },
-              { value: '537', suffix: 'K', label: 'Total Samples' },
+              { value: '91.27', suffix: '%', label: 'NF-ToN-V2 Test Accuracy' },
+              { value: '79.13', suffix: '%', label: 'CICIoT2023 Test Accuracy' },
+              { value: '703', suffix: 'K', label: 'Total Samples' },
               { value: '44', suffix: '', label: 'Total Classes' },
             ].map((s, i) => (
               <div key={i} className="stat-card reveal">

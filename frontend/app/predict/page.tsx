@@ -183,7 +183,7 @@ export default function Predict() {
                 <div className="form-group" style={{ marginBottom: 14 }}>
                   <label htmlFor="dataset-select" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Target Model</label>
                   <select id="dataset-select" className="form-input" value={dataset} onChange={(e) => setDataset(e.target.value)} style={{ width: '100%', padding: '10px 12px', fontFamily: 'var(--font-mono)' }}>
-                    <option value="CICIoT2023">CICIoT2023 (10 classes, 39 features)</option>
+                    <option value="CICIoT2023">CICIoT2023 (10 classes, 42 features)</option>
                     <option value="NF-ToN-IoT-V2">NF-ToN-IoT-V2 (10 classes, 41 features)</option>
                   </select>
                 </div>

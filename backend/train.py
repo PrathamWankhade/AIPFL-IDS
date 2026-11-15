@@ -125,7 +125,7 @@ def resolve_label_col(columns, configured=None):
 
     Mirrors disagree on casing: official-shaped copies use `label`, others use
     `Label` (and NF uses `Attack`). Fail loudly with the real column list
-    instead of a KeyError deep inside a 45M-row scan.
+    instead of a KeyError deep inside a multi-million-row scan.
     """
     configured = configured or config.CICIOT2023_LABEL_COL
     cols = [str(c) for c in columns]
