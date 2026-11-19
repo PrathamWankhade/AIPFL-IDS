@@ -3,6 +3,15 @@
 import { useEffect, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 
+// CSS `prefers-reduced-motion` rules only cover stylesheets; the count-up and
+// typewriter loops below are script-driven, so they must opt out explicitly.
+function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
 function initReveals() {
   const els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right')
   if (!els.length) return
@@ -41,6 +50,11 @@ function initCounters() {
           obs.unobserve(el)
           return
         }
+        if (prefersReducedMotion()) {
+          el.textContent = target.toFixed(decimals) + suffix
+          obs.unobserve(el)
+          return
+        }
 
         const start = performance.now()
         const update = (now: number) => {
@@ -72,6 +86,12 @@ function initTypewriters() {
         let i = 0
         el.textContent = ''
         el.style.visibility = 'visible'
+        if (prefersReducedMotion()) {
+          el.textContent = text
+          el.classList.add('done')
+          obs.unobserve(el)
+          return
+        }
         const interval = setInterval(() => {
           if (i < text.length) {
             el.textContent += text[i]
@@ -92,6 +112,9 @@ function initTypewriters() {
 function initCycleText() {
   const containers = document.querySelectorAll('.cycle-text')
   if (!containers.length) return
+  // Under reduced motion the CSS pins the first label and hides the rest,
+  // so there is nothing to cycle.
+  if (prefersReducedMotion()) return
 
   containers.forEach((container) => {
     const spans = container.querySelectorAll('span')
