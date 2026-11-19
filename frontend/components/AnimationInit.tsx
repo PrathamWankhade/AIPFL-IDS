@@ -29,10 +29,18 @@ function initCounters() {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const el = entry.target as HTMLElement
-        const target = parseFloat(el.getAttribute('data-count-to') || '0')
+        const raw = el.getAttribute('data-count-to') || '0'
+        const target = parseFloat(raw)
         const suffix = el.getAttribute('data-count-suffix') || ''
         const duration = parseInt(el.getAttribute('data-count-duration') || '2000')
-        const decimals = target % 1 !== 0 ? 1 : 0
+        // Preserve the source value's own precision: `79.13` must settle as
+        // `79.13` (not rounded to `79.1`), and ECE `0.007` must never collapse
+        // to `0.0`. Non-numeric placeholders (e.g. a loading "—") are left as-is.
+        const decimals = raw.includes('.') ? raw.split('.')[1].length : 0
+        if (!Number.isFinite(target)) {
+          obs.unobserve(el)
+          return
+        }
 
         const start = performance.now()
         const update = (now: number) => {
