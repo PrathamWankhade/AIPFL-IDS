@@ -12,6 +12,24 @@ Research-prototype cybersecurity platform using Deep Learning + simulated Federa
 
 ---
 
+## Screenshots
+
+Captured from the running app (Next.js on `:3001` + Flask on `:5000`, strict manifest mode).
+
+**Home** — hero with the current release headline (91.27% NF-ToN-IoT-V2 test accuracy):
+
+![Home page](docs/screenshots/home.png)
+
+**Dashboard** — live backend status and stored evaluation metrics from `/api/status` and `/api/metrics`:
+
+![Operations dashboard](docs/screenshots/dashboard.png)
+
+**Predict** — model selection shows the exact feature count each model expects:
+
+![Prediction page](docs/screenshots/predict.png)
+
+---
+
 ## Architecture
 
 ```
