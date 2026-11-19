@@ -13,7 +13,7 @@ export default function Home() {
             <div className="hero-content">
               <div className="hero-badge reveal">
                 <span className="live-dot-pulse" />
-                <span className="cycle-text" style={{ minWidth: 80 }}>
+                <span className="cycle-text" style={{ minWidth: 'calc(20ch + 40px)' }}>
                   {[...ciciotAttacks, ...nftoniotAttacks].map((a) => <span key={a}>{a}</span>)}
                 </span>
                 <span>&nbsp;Research Demo</span>
