@@ -7,7 +7,7 @@ export default function About() {
         <div className="about-hero-block reveal">
           <SectionTag icon="fa-solid fa-shield-halved">About the Project</SectionTag>
           <h1>AI-Powered Federated Learning Intrusion Detection</h1>
-          <p>AIPFL-IDS is a privacy-preserving cybersecurity solution that combines AI, Deep Learning, and Federated Learning to detect malicious network traffic without requiring organizations to share their raw data.</p>
+          <p>Outpost is a privacy-preserving cybersecurity solution that combines AI, Deep Learning, and Federated Learning to detect malicious network traffic without requiring organizations to share their raw data.</p>
         </div>
 
         <div className="about-stats">
@@ -36,7 +36,7 @@ export default function About() {
           </div>
           <div className="card-feature reveal-right">
             <h3>Our Federated Solution</h3>
-            <p>AIPFL-IDS uses Federated Learning where each client trains a model locally and shares only anonymized model parameters — never raw network data. Privacy is preserved while achieving high detection accuracy.</p>
+            <p>Outpost uses Federated Learning where each client trains a model locally and shares only anonymized model parameters — never raw network data. Privacy is preserved while achieving high detection accuracy.</p>
           </div>
         </div>
 

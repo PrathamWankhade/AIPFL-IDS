@@ -12,7 +12,7 @@ def create_model(input_dim, num_classes, strategy=None):
         strategy = tf.distribute.get_strategy()
 
     with strategy.scope():
-        model = Sequential(name="AIPFL_IDS_DNN")
+        model = Sequential(name="OUTPOST_DNN")
 
         units = config.DENSE_UNITS
         drops = config.DROPOUT_RATES

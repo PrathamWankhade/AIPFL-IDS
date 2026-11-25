@@ -52,7 +52,7 @@ export function Navbar() {
             <i className="fa-solid fa-shield-halved" />
           </div>
           <div className="logo-text">
-            AIPFL<span>IDS</span>
+            Outpost
           </div>
         </Link>
 

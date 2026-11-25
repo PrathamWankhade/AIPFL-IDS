@@ -84,7 +84,7 @@ def evaluate_model(model, X_test, y_test, class_names, history=None, save_dir=No
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     disp.plot(ax=ax, cmap="Blues", values_format="d", xticks_rotation=45)
-    ax.set_title("Confusion Matrix — AIPFL-IDS")
+    ax.set_title("Confusion Matrix — Outpost")
     plt.tight_layout()
     plt.savefig(str(save_dir / f"{prefix}confusion_matrix.png"), dpi=150)
     plt.close()

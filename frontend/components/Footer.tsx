@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-const REPO = 'https://github.com/PrathamWankhade/AIPFL-IDS'
+const REPO = 'https://github.com/PrathamWankhade/Outpost'
 
 export function Footer() {
   return (
@@ -10,7 +10,7 @@ export function Footer() {
           <div className="footer-brand">
             <div className="footer-logo">
               <i className="fa-solid fa-shield-halved" />
-              AIPFL-IDS
+              Outpost
             </div>
             <p>
               AI-powered Intrusion Detection System research demo for IoT
@@ -43,7 +43,7 @@ export function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; 2026 AIPFL-IDS. All Rights Reserved.</p>
+          <p>&copy; 2026 Outpost. All Rights Reserved.</p>
           <div className="footer-socials">
             <a href={REPO} aria-label="GitHub repository"><i className="fa-brands fa-github" /></a>
           </div>

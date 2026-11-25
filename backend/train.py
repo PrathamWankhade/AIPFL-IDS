@@ -117,7 +117,7 @@ def merge_ciciot_classes(label):
 
 # CSV rows are streamed in chunks: some mirrors ship a single multi-GB file
 # (e.g. train.csv = 1.6 GB) that cannot be read whole on a 7-8 GB box.
-CSV_CHUNK_ROWS = int(os.environ.get("AIPFL_CSV_CHUNK_ROWS", "400000"))
+CSV_CHUNK_ROWS = int(os.environ.get("OUTPOST_CSV_CHUNK_ROWS", "400000"))
 
 
 def resolve_label_col(columns, configured=None):
@@ -272,7 +272,7 @@ def load_fl_state(path, global_model):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", choices=["CICIoT2023", "NF-ToN-IoT-V2"], default="CICIoT2023")
-    ap.add_argument("--seed", type=int, default=None, help="Override AIPFL_SEED for reproducibility runs")
+    ap.add_argument("--seed", type=int, default=None, help="Override OUTPOST_SEED for reproducibility runs")
     ap.add_argument("--partition", choices=["iid", "label_skew", "quantity_skew"], default=None)
     ap.add_argument("--alpha", type=float, default=None, help="Dirichlet alpha for non-IID partitions")
     ap.add_argument("--client-fraction", type=float, default=None, help="Fraction of clients sampled per round")

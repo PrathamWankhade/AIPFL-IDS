@@ -28,7 +28,7 @@ ALLOWED_EXTENSIONS = {".csv", ".parquet"}
 
 def client_ip():
     """Direct remote address by default; forwarded headers only when the
-    deployment sets AIPFL_TRUST_PROXY=1 behind a sanitizing proxy."""
+    deployment sets OUTPOST_TRUST_PROXY=1 behind a sanitizing proxy."""
     if getattr(config, "TRUST_PROXY", False):
         fwd = request.headers.get("X-Forwarded-For", "")
         if fwd:

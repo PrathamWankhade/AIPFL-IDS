@@ -1,4 +1,4 @@
-"""Centralized baselines for AIPFL-IDS.
+"""Centralized baselines for Outpost.
 
 Answers the question a reviewer always asks: *how much does federated
 averaging actually cost?*  A baseline is trained on the **same raw-first

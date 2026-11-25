@@ -60,30 +60,30 @@ REDUCE_LR_PATIENCE = 1
 REDUCE_LR_FACTOR = 0.5
 MIN_LR = 1e-6
 
-SEED = int(os.environ.get("AIPFL_SEED", "42"))
+SEED = int(os.environ.get("OUTPOST_SEED", "42"))
 RANDOM_STATE = SEED
 MIXED_PRECISION = "mixed_float16"
-CLIENT_PARTITION = os.environ.get("AIPFL_PARTITION", "iid")
-DIRICHLET_ALPHA = float(os.environ.get("AIPFL_ALPHA", "0.5"))
-CLIENT_FRACTION = float(os.environ.get("AIPFL_CLIENT_FRACTION", "1.0"))
-MIN_CLIENTS = int(os.environ.get("AIPFL_MIN_CLIENTS", "1"))
+CLIENT_PARTITION = os.environ.get("OUTPOST_PARTITION", "iid")
+DIRICHLET_ALPHA = float(os.environ.get("OUTPOST_ALPHA", "0.5"))
+CLIENT_FRACTION = float(os.environ.get("OUTPOST_CLIENT_FRACTION", "1.0"))
+MIN_CLIENTS = int(os.environ.get("OUTPOST_MIN_CLIENTS", "1"))
 
 # ── Server ─────────────────────────────────────────────────────────
-MAX_FILE_SIZE_MB = int(os.environ.get("AIPFL_MAX_FILE_MB", "50"))
+MAX_FILE_SIZE_MB = int(os.environ.get("OUTPOST_MAX_FILE_MB", "50"))
 ALLOWED_EXTENSIONS = {".csv", ".parquet"}
-MAX_UPLOAD_ROWS = int(os.environ.get("AIPFL_MAX_ROWS", "100000"))
-MAX_UPLOAD_COLUMNS = int(os.environ.get("AIPFL_MAX_COLS", "200"))
-MAX_BATCH_ROWS = int(os.environ.get("AIPFL_MAX_BATCH_ROWS", "5000"))
-MAX_JOB_ROWS = int(os.environ.get("AIPFL_MAX_JOB_ROWS", "1000000"))
+MAX_UPLOAD_ROWS = int(os.environ.get("OUTPOST_MAX_ROWS", "100000"))
+MAX_UPLOAD_COLUMNS = int(os.environ.get("OUTPOST_MAX_COLS", "200"))
+MAX_BATCH_ROWS = int(os.environ.get("OUTPOST_MAX_BATCH_ROWS", "5000"))
+MAX_JOB_ROWS = int(os.environ.get("OUTPOST_MAX_JOB_ROWS", "1000000"))
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
-    "AIPFL_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",") if o.strip()]
+    "OUTPOST_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",") if o.strip()]
 # Optional app-level controls (off by default; REQUIRED when exposed beyond
 # localhost — the reverse proxy remains the primary boundary).
-API_KEY = os.environ.get("AIPFL_API_KEY") or None
-RATE_LIMIT_PER_MIN = int(os.environ.get("AIPFL_RATE_LIMIT_PER_MIN", "0"))
+API_KEY = os.environ.get("OUTPOST_API_KEY") or None
+RATE_LIMIT_PER_MIN = int(os.environ.get("OUTPOST_RATE_LIMIT_PER_MIN", "0"))
 # Trust X-Forwarded-For only behind a proxy that overwrites it. Default off:
 # spoofable headers must never select the rate-limit bucket on direct exposure.
-TRUST_PROXY = os.environ.get("AIPFL_TRUST_PROXY", "0") == "1"
+TRUST_PROXY = os.environ.get("OUTPOST_TRUST_PROXY", "0") == "1"
 
 for d in [MODELS_DIR, UPLOAD_DIR, DATA_DIR / "raw", DATA_DIR / "processed", RESULTS_DIR]:
     os.makedirs(d, exist_ok=True)

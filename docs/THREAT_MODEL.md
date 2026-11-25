@@ -1,4 +1,4 @@
-# Threat model — AIPFL-IDS federation
+# Threat model — Outpost federation
 
 Status: simulation + documented target. Current `create_clients` partitions are
 in-process array splits, not independent organisations/devices.
@@ -21,8 +21,8 @@ in-process array splits, not independent organisations/devices.
 - Authenticated client identity, TLS for FL transport, secure aggregation
   (SecAgg/SecAgg+), differential privacy with clipping/noise/accounting,
   robust aggregation (trimmed mean/median/Krum), Byzantine tolerance.
-- The Flask API exposes optional app-level controls (`AIPFL_API_KEY`,
-  `AIPFL_RATE_LIMIT_PER_MIN`, origin allow-list) that default to **off** — they
+- The Flask API exposes optional app-level controls (`OUTPOST_API_KEY`,
+  `OUTPOST_RATE_LIMIT_PER_MIN`, origin allow-list) that default to **off** — they
   are shared-secret/guest-grade, not user identity or authorization. Run behind
   a reverse proxy with TLS, real authn/z, quotas, and audit logging
   (see `docs/DEPLOYMENT.md`).

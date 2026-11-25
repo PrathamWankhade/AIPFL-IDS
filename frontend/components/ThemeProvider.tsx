@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('aipfl-theme') as Theme | null
+    const stored = localStorage.getItem('outpost-theme') as Theme | null
     const initial = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     setTheme(initial)
     document.documentElement.setAttribute('data-theme', initial)
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggle = () => {
     setTheme((prev) => {
       const next = prev === 'light' ? 'dark' : 'light'
-      localStorage.setItem('aipfl-theme', next)
+      localStorage.setItem('outpost-theme', next)
       document.documentElement.setAttribute('data-theme', next)
       return next
     })

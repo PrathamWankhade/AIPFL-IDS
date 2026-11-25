@@ -6,7 +6,7 @@ import { Footer } from '@/components/Footer'
 import { AnimationInit } from '@/components/AnimationInit'
 
 export const metadata: Metadata = {
-  title: 'AIPFL-IDS | AI Powered Federated Learning IDS',
+  title: 'Outpost | AI Powered Federated Learning IDS',
   description: 'AI Powered Federated Learning Intrusion Detection System for Secure IoT Networks',
 }
 

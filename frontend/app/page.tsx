@@ -32,7 +32,7 @@ export default function Home() {
                 </span>
               </h1>
               <p className="hero-description reveal">
-                AIPFL-IDS is an AI-powered Intrusion Detection System for
+                Outpost is an AI-powered Intrusion Detection System for
                 modern IoT environments. It combines Deep Learning and
                 simulated Federated Learning to detect cyber attacks in
                 network traffic. Research demo — no production
@@ -42,7 +42,7 @@ export default function Home() {
                 <Link href="/predict" className="btn btn-yellow">
                   <i className="fa-solid fa-bolt" /> Start Detection
                 </Link>
-                <a href="https://github.com/PrathamWankhade/AIPFL-IDS" target="_blank" rel="noreferrer" className="btn">
+                <a href="https://github.com/PrathamWankhade/Outpost" target="_blank" rel="noreferrer" className="btn">
                   <i className="fa-brands fa-github" /> GitHub
                 </a>
               </div>
@@ -152,7 +152,7 @@ export default function Home() {
         <div className="container">
           <div className="section-header reveal">
             <SectionTag>Workflow</SectionTag>
-            <h2>How AIPFL-IDS Works</h2>
+            <h2>How Outpost Works</h2>
             <p>A complete AI pipeline that transforms raw IoT traffic into intelligent predictions. Federated training is simulated in one process — see threat model.</p>
           </div>
           <div className="timeline">

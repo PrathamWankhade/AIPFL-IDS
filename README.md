@@ -1,4 +1,4 @@
-# AIPFL-IDS
+# Outpost
 
 **AI-Powered Federated Learning Intrusion Detection System**
 
@@ -51,7 +51,7 @@ frontend/ (Next.js :3000)        backend/ (Flask :5000)
 ## Project Structure
 
 ```
-AIPFL-IDS/
+Outpost/
 ├── frontend/                # Next.js (React, TypeScript)
 │   ├── app/                 # App Router pages
 │   │   ├── layout.tsx       # Root layout (Navbar, Footer, Theme)
@@ -261,12 +261,12 @@ and train-only preprocessing bundle** as `train.py`, then writes
 Comparing it against `training_summary_<dataset>.json` quantifies what
 simulated FedAvg costs — the number to quote in a write-up.
 
-Env: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`, `AIPFL_MAX_BATCH_ROWS`,
-`AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`, `AIPFL_ALLOWED_ORIGINS`, `AIPFL_API_KEY`,
-`AIPFL_RATE_LIMIT_PER_MIN`, `AIPFL_TRUST_PROXY`, `AIPFL_REQUIRE_MANIFEST`, `AIPFL_SEED`,
-`AIPFL_PARTITION`, `AIPFL_ALPHA`, `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`,
-`AIPFL_CLEAR_SESSION` (default on; per-client `clear_session` keeps TF memory flat on
-small-RAM hosts — set `0` to disable), `AIPFL_CSV_CHUNK_ROWS` (CSV streaming chunk size).
+Env: `OUTPOST_MAX_FILE_MB`, `OUTPOST_MAX_ROWS`, `OUTPOST_MAX_COLS`, `OUTPOST_MAX_BATCH_ROWS`,
+`OUTPOST_MAX_JOB_ROWS`, `OUTPOST_MAX_CONCURRENT_JOBS`, `OUTPOST_ALLOWED_ORIGINS`, `OUTPOST_API_KEY`,
+`OUTPOST_RATE_LIMIT_PER_MIN`, `OUTPOST_TRUST_PROXY`, `OUTPOST_REQUIRE_MANIFEST`, `OUTPOST_SEED`,
+`OUTPOST_PARTITION`, `OUTPOST_ALPHA`, `OUTPOST_CLIENT_FRACTION`, `OUTPOST_MIN_CLIENTS`,
+`OUTPOST_CLEAR_SESSION` (default on; per-client `clear_session` keeps TF memory flat on
+small-RAM hosts — set `0` to disable), `OUTPOST_CSV_CHUNK_ROWS` (CSV streaming chunk size).
 See `docs/DEPLOYMENT.md` and `docs/THREAT_MODEL.md`.
 
 ---

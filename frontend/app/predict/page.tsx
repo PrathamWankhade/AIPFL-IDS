@@ -224,7 +224,7 @@ export default function Predict() {
               </form>
 
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: '2px solid var(--bg)' }}>
-                <small><i className="fa-solid fa-info-circle" /> The selected file is sent to the configured AIPFL-IDS server for analysis and deleted after prediction. See deployment docs for retention, logging, and transport security.</small>
+                <small><i className="fa-solid fa-info-circle" /> The selected file is sent to the configured Outpost server for analysis and deleted after prediction. See deployment docs for retention, logging, and transport security.</small>
               </div>
             </div>
           </div>

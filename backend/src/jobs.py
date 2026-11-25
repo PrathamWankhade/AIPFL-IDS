@@ -15,16 +15,16 @@ import uuid
 from pathlib import Path
 
 _LOCK = threading.Lock()
-_MAX_CONCURRENT = int(os.environ.get("AIPFL_MAX_CONCURRENT_JOBS", "2"))
+_MAX_CONCURRENT = int(os.environ.get("OUTPOST_MAX_CONCURRENT_JOBS", "2"))
 
 
 _UPLOAD_ROOT: str | None = None
 _BOOT_TIME = time.time()
-STALE_AFTER_SECONDS = float(os.environ.get("AIPFL_JOB_STALE_SECONDS", "3600"))
+STALE_AFTER_SECONDS = float(os.environ.get("OUTPOST_JOB_STALE_SECONDS", "3600"))
 
 
 def jobs_dir(upload_dir=None):
-    root = upload_dir or _UPLOAD_ROOT or os.environ.get("AIPFL_UPLOAD_DIR", "uploads")
+    root = upload_dir or _UPLOAD_ROOT or os.environ.get("OUTPOST_UPLOAD_DIR", "uploads")
     d = Path(root) / "jobs"
     d.mkdir(parents=True, exist_ok=True)
     return d

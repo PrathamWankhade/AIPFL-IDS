@@ -2,7 +2,7 @@
 
 import { SectionTag } from '@/components/SectionTag'
 
-const REPO = 'https://github.com/PrathamWankhade/AIPFL-IDS'
+const REPO = 'https://github.com/PrathamWankhade/Outpost'
 
 const CHANNELS = [
   {
@@ -43,7 +43,7 @@ export default function Contact() {
           <SectionTag icon="fa-solid fa-envelope">Get In Touch</SectionTag>
           <h1 style={{ marginTop: 10 }}>Let&apos;s Talk About Network Security</h1>
           <p style={{ maxWidth: 640, marginTop: 6 }}>
-            AIPFL-IDS is an open-source research prototype. This project has no
+            Outpost is an open-source research prototype. This project has no
             backend contact service, so messages go through GitHub — every
             channel below is a real, live destination.
           </p>

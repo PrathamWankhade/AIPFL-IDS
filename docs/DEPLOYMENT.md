@@ -1,4 +1,4 @@
-# Deployment — AIPFL-IDS
+# Deployment — Outpost
 
 ## Topology
 
@@ -6,8 +6,8 @@
   When hosts differ, set the proxy target accordingly; do not expose Flask
   directly without the controls below.
 - Backend: Flask on `:5000`. `app.config["MAX_CONTENT_LENGTH"]` enforces
-  `AIPFL_MAX_FILE_MB` (default 50); `/api/predict-batch` caps at
-  `AIPFL_MAX_BATCH_ROWS` (default 5000); uploads are tempfiles deleted in
+  `OUTPOST_MAX_FILE_MB` (default 50); `/api/predict-batch` caps at
+  `OUTPOST_MAX_BATCH_ROWS` (default 5000); uploads are tempfiles deleted in
   `finally`.
 
 ## Required fronting (not in app code)
@@ -15,14 +15,14 @@
 - Reverse proxy with TLS, request-size limits matching the app caps,
   authentication (API key/OIDC), per-user quotas/rate limits, access logs
   with request IDs, and separate admin functions.
-- App-level (defense in depth, single-replica): set `AIPFL_API_KEY` to
+- App-level (defense in depth, single-replica): set `OUTPOST_API_KEY` to
   require `X-API-Key` on `/api/predict*` and `/api/jobs*`, and
-  `AIPFL_RATE_LIMIT_PER_MIN` for a per-IP sliding-window limit. These are
+  `OUTPOST_RATE_LIMIT_PER_MIN` for a per-IP sliding-window limit. These are
   not a substitute for the proxy boundary.
-- The limiter keys on the direct remote address unless `AIPFL_TRUST_PROXY=1`
+- The limiter keys on the direct remote address unless `OUTPOST_TRUST_PROXY=1`
   is set behind a proxy that overwrites `X-Forwarded-For`; spoofable
   headers are otherwise ignored. Verify limits through the deployed proxy.
-- CORS: `AIPFL_ALLOWED_ORIGINS` (default localhost:3000,3001),
+- CORS: `OUTPOST_ALLOWED_ORIGINS` (default localhost:3000,3001),
   credentials disabled. This is not authentication.
 
 ## Health checking
@@ -46,16 +46,16 @@
   on every run, and a fresh clone ships the full artifact set (model, scaler,
   encoder, features, summary, manifest). After retraining, commit the updated
   models and manifests together so hashes always match the shipped weights.
-- Set `AIPFL_REQUIRE_MANIFEST=1` in production: model loading then refuses
+- Set `OUTPOST_REQUIRE_MANIFEST=1` in production: model loading then refuses
   a missing manifest, an incomplete hash set, a dataset mismatch, or any
   tampered artifact. A colocated manifest detects mismatch, not forgery —
   sign it or store its digest separately for stronger authenticity.
 
 ## Environment
 
-- Limits/uploads: `AIPFL_MAX_FILE_MB`, `AIPFL_MAX_ROWS`, `AIPFL_MAX_COLS`,
-  `AIPFL_MAX_BATCH_ROWS`, `AIPFL_MAX_JOB_ROWS`, `AIPFL_MAX_CONCURRENT_JOBS`.
-- Edge controls (all default off): `AIPFL_API_KEY`, `AIPFL_RATE_LIMIT_PER_MIN`,
-  `AIPFL_ALLOWED_ORIGINS`, `AIPFL_TRUST_PROXY`.
-- Training/run: `AIPFL_SEED`, `AIPFL_PARTITION`, `AIPFL_ALPHA`,
-  `AIPFL_CLIENT_FRACTION`, `AIPFL_MIN_CLIENTS`, `AIPFL_REQUIRE_MANIFEST`.
+- Limits/uploads: `OUTPOST_MAX_FILE_MB`, `OUTPOST_MAX_ROWS`, `OUTPOST_MAX_COLS`,
+  `OUTPOST_MAX_BATCH_ROWS`, `OUTPOST_MAX_JOB_ROWS`, `OUTPOST_MAX_CONCURRENT_JOBS`.
+- Edge controls (all default off): `OUTPOST_API_KEY`, `OUTPOST_RATE_LIMIT_PER_MIN`,
+  `OUTPOST_ALLOWED_ORIGINS`, `OUTPOST_TRUST_PROXY`.
+- Training/run: `OUTPOST_SEED`, `OUTPOST_PARTITION`, `OUTPOST_ALPHA`,
+  `OUTPOST_CLIENT_FRACTION`, `OUTPOST_MIN_CLIENTS`, `OUTPOST_REQUIRE_MANIFEST`.

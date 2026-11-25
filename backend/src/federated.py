@@ -180,8 +180,8 @@ def train_client(global_weights, X_client, y_client, input_dim, num_classes, cla
     # TF eager (native SIGABRT, no Python traceback). Clearing the Keras
     # session after each client keeps resident memory flat. Verified safe
     # for eager-mode models: the global model created before the loop still
-    # evaluates and saves afterwards. Opt out with AIPFL_CLEAR_SESSION=0.
-    if os.environ.get("AIPFL_CLEAR_SESSION", "1") == "1":
+    # evaluates and saves afterwards. Opt out with OUTPOST_CLEAR_SESSION=0.
+    if os.environ.get("OUTPOST_CLEAR_SESSION", "1") == "1":
         backend = getattr(getattr(tf, "keras", None), "backend", None)
         clear = getattr(backend, "clear_session", None)
         if callable(clear):

@@ -19,14 +19,14 @@ def sha256_file(path, chunk=1 << 20):
 
 
 def _strict_mode(require_manifest):
-    return bool(require_manifest) or os.environ.get("AIPFL_REQUIRE_MANIFEST") == "1"
+    return bool(require_manifest) or os.environ.get("OUTPOST_REQUIRE_MANIFEST") == "1"
 
 
 def verify_release(dataset, model_path, scaler_path, encoder_path, feature_path,
                    results_dir, require_manifest=False):
     """Verify all four required artifacts against the release manifest.
 
-    Strict mode (require_manifest=True or AIPFL_REQUIRE_MANIFEST=1, required
+    Strict mode (require_manifest=True or OUTPOST_REQUIRE_MANIFEST=1, required
     for production): manifest must exist, name the dataset, and carry a
     valid sha256 for every required artifact. Non-strict mode preserves the
     old behavior for pre-manifest local runs: warn and continue when the

@@ -4,8 +4,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      AIPFL_MAX_FILE_MB: "50"
-      AIPFL_ALLOWED_ORIGINS: "http://localhost:3000"
+      OUTPOST_MAX_FILE_MB: "50"
+      OUTPOST_ALLOWED_ORIGINS: "http://localhost:3000"
     volumes:
       - ./backend/models:/app/backend/models:ro
       - ./backend/results:/app/backend/results:ro
